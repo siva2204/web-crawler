@@ -5,6 +5,8 @@ import (
 	"github.com/siva2204/web-crawler/queue"
 	redis_crawler "github.com/siva2204/web-crawler/redis"
 	"github.com/siva2204/web-crawler/config"
+	"net/http"
+	"encoding/json"
 )
 
 func main() {
@@ -23,6 +25,26 @@ func main() {
 
 	crawler.Queue.Enqueue("http://localhost:5000")
 
-	crawler.Run()
+	go crawler.Run()
 
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if(r.Method == "GET") {
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+		}
+	})
+
+	http.HandleFunc("/search", func(w http.ResponseWriter, r *http.Request) {
+		if(r.Method == "GET") {
+			w.Header().Set("Content-Type", "application/json")
+			urls, err := redis_crawler.Client.GetUnEncoded("hello")
+			if err != nil {
+				json.NewEncoder(w).Encode(map[string]string{"status": "error"})
+			} else {
+				json.NewEncoder(w).Encode(urls)
+			}
+		}
+	})
+
+	http.ListenAndServe(":7000", nil)
 }

@@ -27,6 +27,22 @@ type redisPayLoad struct {
 
 var Client *RedisClient
 
+func (client *RedisClient) GetUnEncoded(key string) ([]byte, error) {
+	val, err := client.RDB.Get(client.ctx, key).Result()
+	switch {
+	case err == redis.Nil:
+		return []byte{}, ErrInvalidKey
+	case err != nil:
+		return []byte{}, ErrRedis
+	case val == "":
+		return []byte{}, ErrEmptyValue
+	}
+
+	x := []byte(val)
+
+	return x, nil
+}
+
 func CreateClient(host string, port string) {
 	ctx := context.Background()
 	addr := fmt.Sprintf("%s:%s", host, port)
