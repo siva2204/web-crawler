@@ -15,5 +15,5 @@ require (
 	golang.org/x/net v0.0.0-20220107192237-5cfca573fb4d // indirect
 	golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e // indirect
 	gorm.io/driver/mysql v1.2.3
-	gorm.io/gorm v1.22.4 // indirect
+	gorm.io/gorm v1.22.4
 )

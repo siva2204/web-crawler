@@ -88,19 +88,38 @@ document.querySelector("#search-button").onclick = async(e) => {
     let timeStart = Date.now();
     let resp = await axios.get("/search/" + word);
     let timeEnd = Date.now();
+    let { data } = resp;
+    data = data.data;
+    console.log(data);
     let ele = document.querySelector("#links");
-    let data = resp.data.data;
+    // data = [{
+    //         url: "https://www.google.com/search?q=" + word,
+    //         title: "Google",
+    //         description: "Search for " + word + " on Google"
+    //     },
+    //     {
+    //         url: "https://www.bing.com/search?q=" + word,
+    //         title: "Bing",
+    //         description: "Search for " + word + " on Bing"
+    //     },
+    // ];
     ele.innerHTML = "";
     for (var i = 0; i < data.length; i++) {
         var aside = document.createElement("aside");
         var a = document.createElement("a");
-        var link = document.createTextNode(`${data[i]}`);
+        var link = document.createTextNode(`${data[i]["Title"]}`);
         a.appendChild(link);
         a.target = "_blank";
-        a.href = `${data[i]}`;
+        a.href = `${data[i]["url"]}`;
         aside.appendChild(a);
+        var p = document.createElement("p");
+        var text = document.createTextNode(`${data[i]["Description"]}`);
+        p.appendChild(text);
+        aside.appendChild(p);
         ele.appendChild(aside);
+        var hr = document.createElement("hr");
+        ele.appendChild(hr);
     }
     data.length ? (ele.style.display = "block") : null;
-    document.querySelector("section").innerText = `Found ${data.length} results in ${timeEnd - timeStart}ms using trie`;
+    document.querySelector("section").innerText = `Found ${data.length} results in ${timeEnd - timeStart}ms`;
 };
