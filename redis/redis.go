@@ -54,6 +54,7 @@ func (client *RedisClient) Insert(key string, value []string) error {
 	}
 
 	if err = client.RDB.Set(client.ctx, key, val, 0).Err(); err != nil {
+		fmt.Println("err", err)
 		return ErrRedis
 	}
 
@@ -77,6 +78,7 @@ func (client *RedisClient) Get(key string) ([]string, error) {
 	case err == redis.Nil:
 		return []string{}, ErrInvalidKey
 	case err != nil:
+		fmt.Println("err", err)
 		return []string{}, ErrRedis
 	case val == "":
 		return []string{}, ErrEmptyValue
@@ -103,6 +105,7 @@ func (client *RedisClient) AutoComplete(key string) ([]string, error) {
 		var err error
 		keys, cursor, err = client.RDB.Scan(client.ctx, cursor, key+"*", 10).Result()
 		if err != nil {
+			fmt.Println("err", err)
 			return []string{}, ErrRedis
 		}
 		if cursor == 0 {

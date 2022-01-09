@@ -7,7 +7,7 @@ require (
 	github.com/andybalholm/brotli v1.0.4 // indirect
 	github.com/bbalet/stopwords v1.0.0
 	github.com/go-redis/redis/v8 v8.11.4
-	github.com/gofiber/fiber/v2 v2.24.0 // indirect
+	github.com/gofiber/fiber/v2 v2.24.0
 	github.com/jdkato/prose/v2 v2.0.0
 	github.com/jinzhu/now v1.1.4 // indirect
 	github.com/joho/godotenv v1.4.0

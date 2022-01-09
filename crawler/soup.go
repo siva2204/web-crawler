@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
+
 	"github.com/PuerkitoBio/goquery"
 	"github.com/bbalet/stopwords"
 	"github.com/jdkato/prose/v2"
@@ -22,7 +23,7 @@ func uRLScrape(url string) ([]string, error) {
 	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
-		return []string{}, fmt.Errorf("error status code %d %s", res.StatusCode , url)
+		return []string{}, fmt.Errorf("error status code %d %s", res.StatusCode, url)
 	}
 
 	// Load the HTML document
@@ -40,7 +41,7 @@ func uRLScrape(url string) ([]string, error) {
 		href, _ := s.Attr("href")
 		// check if url has domain name
 		if href != "" && href[0] == '/' {
-			href = "https://"+ strings.Split(url, "/")[2] +href
+			href = "https://" + strings.Split(url, "/")[2] + href
 			urls = append(urls, href)
 		} else if href != "" && href[0] != '/' && strings.Contains(href, config.Getenv("SEED_URL")) {
 			// push url to array
@@ -59,7 +60,7 @@ func dataScrape(url string) (
 	}
 	defer res.Body.Close()
 	if res.StatusCode != 200 {
-		return []string{}, fmt.Errorf("error status code %d %s", res.StatusCode , url)
+		return []string{}, fmt.Errorf("error status code %d %s", res.StatusCode, url)
 	}
 
 	// Load the HTML document
@@ -93,4 +94,41 @@ func dataScrape(url string) (
 	}
 	// })
 	return wordArray, nil
+}
+
+func MetaScrape(url string) (string, string, error) {
+	// Request the HTML page.
+	res, err := http.Get(url)
+	if err != nil {
+		return "", "", err
+	}
+	defer res.Body.Close()
+	if res.StatusCode != 200 {
+		return "", "", fmt.Errorf("error status code %d %s", res.StatusCode, url)
+	}
+
+	// Load the HTML document
+	doc, err := goquery.NewDocumentFromReader(res.Body)
+	if err != nil {
+		return "", "", err
+	}
+
+	// array of url
+
+	var description string
+	var title string
+
+	// Find the review items
+	doc.Find("meta").Each(func(i int, s *goquery.Selection) {
+		if name, _ := s.Attr("name"); name == "description" {
+			description, _ = s.Attr("content")
+		}
+	})
+
+	doc.Find("title").Each(func(i int, s *goquery.Selection) {
+		title = s.Text()
+		fmt.Printf("Title field: %s\n", title)
+	})
+
+	return title, description, nil
 }
