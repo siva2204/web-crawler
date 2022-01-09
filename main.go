@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"net/http"
 
 	"github.com/siva2204/web-crawler/config"
@@ -9,6 +10,8 @@ import (
 	"github.com/siva2204/web-crawler/queue"
 	redis_crawler "github.com/siva2204/web-crawler/redis"
 )
+
+var threads = flag.Int("threads", 100, "number of crawler threads")
 
 func main() {
 	// fmt.Println("work in progress")
@@ -18,7 +21,7 @@ func main() {
 	// redis_crawler.CreateClient(config.Getenv("REDIS_HOST"), config.Getenv("REDIS_PORT"))
 
 	crawler := crawler.Crawler{
-		Threads: 100,
+		Threads: *threads,
 		Queue:   &queue.Queue{},
 		Hm: crawler.HashMap{
 			Hm: make(map[string]bool),
