@@ -71,8 +71,6 @@ func (client *RedisClient) Append(key string, value []string) error {
 		return client.Insert(key, value)
 	}
 
-	fmt.Println(val)
-
 	x := []byte(val)
 	var data redisPayLoad
 
@@ -81,7 +79,6 @@ func (client *RedisClient) Append(key string, value []string) error {
 	if err != nil {
 		return ErrFormat
 	}
-	fmt.Println(data.Payload)
 
 	newPayload := append(data.Payload, value...)
 

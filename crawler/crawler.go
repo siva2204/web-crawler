@@ -5,6 +5,8 @@ import (
 	"sync"
 
 	"github.com/siva2204/web-crawler/queue"
+	redis_crawler "github.com/siva2204/web-crawler/redis"
+
 )
 
 type HashMap struct {
@@ -49,10 +51,6 @@ func (c *Crawler) Run() {
 				// crawl with the url
 				urls, err := uRLScrape(url)
 
-				c.Hm.Lock()
-				c.Hm.Hm[url] = true
-				c.Hm.Unlock()
-
 				if err != nil {
 					fmt.Printf("Error crawling url %+v", err)
 					fmt.Println()
@@ -60,6 +58,28 @@ func (c *Crawler) Run() {
 					// c.Wg.Done()
 					// return
 				}
+
+				go func(url string){
+					data, err := dataScrape(url)
+
+					if err != nil {
+						fmt.Printf("Error getting data %+v", err)
+						fmt.Println()
+
+						// c.Wg.Done()
+						// return
+					}
+
+					// for each token in data
+					for _, token := range data {
+						fmt.Printf("token: %s\n", token)
+						redis_crawler.Client.Append(token, []string{url})
+					}
+				}(url)
+
+				c.Hm.Lock()
+				c.Hm.Hm[url] = true
+				c.Hm.Unlock()
 
 				// enqueue the all the related url
 				for _, url := range urls {
