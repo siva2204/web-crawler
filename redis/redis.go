@@ -87,3 +87,27 @@ func (client *RedisClient) Append(key string, value []string) error {
 
 	return client.Insert(key, newPayload)
 }
+
+func (client *RedisClient) Get(key string) ([]string, error) {
+	val, err := client.RDB.Get(client.ctx, key).Result()
+	switch {
+	case err == redis.Nil:
+		return []string{}, ErrInvalidKey
+	case err != nil:
+		return []string{}, ErrRedis
+	case val == "":
+		return []string{}, ErrEmptyValue
+	}
+
+	x := []byte(val)
+	var data redisPayLoad
+
+	err = json.Unmarshal(x, &data)
+
+	if err != nil {
+		return []string{}, ErrFormat
+	}
+
+	return data.Payload, nil
+
+}
