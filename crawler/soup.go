@@ -119,9 +119,7 @@ func MetaScrape(url string) (string, string, error) {
 
 	text := doc.Text() // s.Text()
 
-	cleanContent := stopwords.CleanString(text, "en", true)
-
-	description = cleanContent[0:100]
+	description = text[0:500]
 
 	// array of url
 

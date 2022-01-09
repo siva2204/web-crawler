@@ -23,7 +23,7 @@ func InitSeeder(crawler *Crawler) {
 func (s *Seeder) Run() {
 	// sleep for 10 secs
 
-	time.Sleep(time.Second * 5)
+	time.Sleep(time.Second * 1500)
 
 	fmt.Println("slept for 5 seconds")
 
@@ -42,12 +42,12 @@ func (s *Seeder) Run() {
 	db.PersistIndex(keys, values)
 
 	// flushing redis after persisting in mysql db
-	// redis_crawler.Client.RDB.FlushAll(redis_crawler.Client.RDB.Context())
+	redis_crawler.Client.RDB.FlushAll(redis_crawler.Client.RDB.Context())
 
 	time.Sleep(time.Second * 5)
 
 	fmt.Println("Starting again")
 
 	s.Foo <- 0
-	time.Sleep(time.Second * 5)
+	time.Sleep(time.Second * 1500)
 }

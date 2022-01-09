@@ -113,6 +113,7 @@ document.querySelector("#search-button").onclick = async(e) => {
         a.href = `${data[i]["url"]}`;
         aside.appendChild(a);
         var p = document.createElement("p");
+        data[i]["Description"] = data[i]["Description"][0].toUpperCase() + data[i]["Description"].slice(1);
         var text = document.createTextNode(`${data[i]["Description"]}`);
         p.appendChild(text);
         aside.appendChild(p);
