@@ -64,11 +64,11 @@ func (client *RedisClient) Append(key string, value []string) error {
 	val, err := client.RDB.Get(client.ctx, key).Result()
 	switch {
 	case err == redis.Nil:
-		return ErrInvalidKey
+		return client.Insert(key, value)
 	case err != nil:
 		return ErrRedis
 	case val == "":
-		// val = '[]'
+		return client.Insert(key, value)
 	}
 
 	fmt.Println(val)
