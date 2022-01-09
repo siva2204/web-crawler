@@ -27,20 +27,6 @@ type redisPayLoad struct {
 
 var Client *RedisClient
 
-// get all the values in the set for a given key
-func (client *RedisClient) GetSetValues(key string) ([]string, error) {
-	val, err := client.RDB.SMembers(client.ctx, key).Result()
-
-	switch {
-	case err == redis.Nil:
-		return []string{}, ErrInvalidKey
-	case err != nil:
-		return []string{}, ErrRedis
-	}
-
-	return val, nil
-}
-
 func CreateClient(host string, port string) {
 	ctx := context.Background()
 	addr := fmt.Sprintf("%s:%s", host, port)
@@ -142,25 +128,30 @@ func (client *RedisClient) GetAll() ([]string, error) {
 	return dataSet, nil
 }
 
-func (client *RedisClient) GetMany(keys []string) ([][]string, error) {
+func (client *RedisClient) GetMany(keys []string) (map[string][]string, error) {
+	var hm map[string][]string = make(map[string][]string)
 
-	mget := client.RDB.MGet(client.ctx, keys...)
+	for _, x := range keys {
+		val, err := client.GetSetValues(x)
 
-	if err := mget.Err(); err != nil {
-		fmt.Println("err", err)
-		return [][]string{}, ErrRedis
+		if err != nil {
+			fmt.Errorf("error getting data form redis for key %s", x)
+		}
+		hm[x] = val
+	}
+	return hm, nil
+}
+
+// get all the values in the set for a given key
+func (client *RedisClient) GetSetValues(key string) ([]string, error) {
+	val, err := client.RDB.SMembers(client.ctx, key).Result()
+
+	switch {
+	case err == redis.Nil:
+		return []string{}, ErrInvalidKey
+	case err != nil:
+		return []string{}, ErrRedis
 	}
 
-	data := mget.Val()
-
-	values := [][]string{}
-
-	for _, x := range data {
-		var singleData redisPayLoad
-		json.Unmarshal([]byte(fmt.Sprintf("%v", x)), &singleData)
-		values = append(values, singleData.Payload)
-	}
-
-	return values, nil
-
+	return val, nil
 }

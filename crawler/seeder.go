@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/siva2204/web-crawler/db"
 	redis_crawler "github.com/siva2204/web-crawler/redis"
 )
 
@@ -38,11 +39,10 @@ func (s *Seeder) Run() {
 		fmt.Errorf("unable to get values : ", err)
 	}
 
-	fmt.Println(values)
+	db.PersistIndex(keys, values)
 
-	// data, _ := redis_crawler.Client.Get("maintain")
-
-	// fmt.Println(data)
+	// flushing redis after persisting in mysql db
+	redis_crawler.Client.RDB.FlushAll(redis_crawler.Client.RDB.Context())
 
 	time.Sleep(time.Second * 5)
 
@@ -50,5 +50,4 @@ func (s *Seeder) Run() {
 
 	s.Foo <- 0
 	time.Sleep(time.Second * 5)
-
 }

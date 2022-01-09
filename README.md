@@ -4,7 +4,7 @@
 
 - Go 1.16+
 - MySQL
-- redis [download link](https://redis.io/download)
+- redis [download link](https://redis.io/download) v5.0.7
 - [air](https://github.com/cosmtrek/air) (for live reload) [installation link](https://github.com/cosmtrek/air#prefer-installsh)
 
 ### Migrations

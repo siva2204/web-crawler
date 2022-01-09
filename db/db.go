@@ -11,7 +11,7 @@ import (
 // mysql connection object
 var DB *gorm.DB
 
-func initDB() {
+func InitDB() {
 	dbName := config.Getenv("DB_NAME")
 	dbPwd := config.Getenv("DB_PWD")
 	dbUser := config.Getenv("DB_USER")
@@ -28,4 +28,38 @@ func initDB() {
 	}
 
 	DB = db
+}
+
+// this func persist index from redis to mysql
+func PersistIndex(key []string, values map[string][]string) {
+	n := len(key)
+
+	for i := 0; i < n; i++ {
+		k := key[i]
+
+		var keyS Key
+
+		// create key if not present
+		if err := DB.Where("`key` = ?", k).First(&keyS).Error; err != nil {
+			fmt.Errorf("Key not found %+v", err)
+
+			keyS.Key = k
+
+			if err := DB.Create(&keyS).Error; err != nil {
+				fmt.Errorf("Error in creating key")
+			}
+		}
+
+		// saving all the urls
+		for _, ll := range values[k] {
+			var newUrl Url
+
+			newUrl.KeyId = keyS.Id
+			newUrl.Url = ll
+
+			if err := DB.Create(newUrl).Error; err != nil {
+				fmt.Errorf("Error creating url in db %+v", err)
+			}
+		}
+	}
 }

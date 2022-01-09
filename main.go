@@ -5,6 +5,7 @@ import (
 
 	"github.com/siva2204/web-crawler/config"
 	"github.com/siva2204/web-crawler/crawler"
+	"github.com/siva2204/web-crawler/db"
 	"github.com/siva2204/web-crawler/httpapi"
 	"github.com/siva2204/web-crawler/queue"
 	redis_crawler "github.com/siva2204/web-crawler/redis"
@@ -14,11 +15,8 @@ import (
 var threads = flag.Int("threads", 2, "number of crawler threads")
 
 func main() {
-	// fmt.Println("work in progress")
 	redis_crawler.CreateClient(config.Getenv("REDIS_HOST"), config.Getenv("REDIS_PORT"))
-	// redis_crawler.Client.Insert("hello", []string{"a", "b", "c"})
-	// redis_crawler.Client.Append("world", []string{"a", "b", "c"})
-	// redis_crawler.CreateClient(config.Getenv("REDIS_HOST"), config.Getenv("REDIS_PORT"))
+	db.InitDB()
 
 	crawlerBot := crawler.Crawler{
 		Threads: *threads,
