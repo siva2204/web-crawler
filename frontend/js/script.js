@@ -86,14 +86,10 @@ document.querySelector("#search-button").onclick = async(e) => {
     word = document.querySelector("#input").value;
     document.querySelector("section").innerText = "Searching...";
     let timeStart = Date.now();
-    let {
-        data
-    } = await axios.get("/search/" + word);
-
-    data = JSON.parse(data.data)['Payload'];
-    data = [...new Set(data)];
+    let resp = await axios.get("/search/" + word);
     let timeEnd = Date.now();
     let ele = document.querySelector("#links");
+    let data = resp.data.data;
     ele.innerHTML = "";
     for (var i = 0; i < data.length; i++) {
         var aside = document.createElement("aside");

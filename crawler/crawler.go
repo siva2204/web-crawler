@@ -72,10 +72,10 @@ func (c *Crawler) Run(rootNode *trie.Node) {
 
 					// for each token in data
 					for _, token := range data {
-						redis_crawler.Client.Append(token, []string{url})
+						redis_crawler.Client.Append(token, url)
 					}
 
-					go rootNode.Insert(data, url)
+					// go rootNode.Insert(data, url)
 
 				}(url)
 

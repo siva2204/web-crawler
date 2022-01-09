@@ -27,20 +27,18 @@ type redisPayLoad struct {
 
 var Client *RedisClient
 
-func (client *RedisClient) GetUnEncoded(key string) (string, error) {
-	val, err := client.RDB.Get(client.ctx, key).Result()
+// get all the values in the set for a given key
+func (client *RedisClient) GetSetValues(key string) ([]string, error) {
+	val, err := client.RDB.SMembers(client.ctx, key).Result()
+
 	switch {
 	case err == redis.Nil:
-		return "", ErrInvalidKey
+		return []string{}, ErrInvalidKey
 	case err != nil:
-		return "", ErrRedis
-	case val == "":
-		return "", ErrEmptyValue
+		return []string{}, ErrRedis
 	}
 
-	x := val
-
-	return x, nil
+	return val, nil
 }
 
 func CreateClient(host string, port string) {
@@ -76,29 +74,15 @@ func (client *RedisClient) Insert(key string, value []string) error {
 	return nil
 }
 
-func (client *RedisClient) Append(key string, value []string) error {
-	val, err := client.RDB.Get(client.ctx, key).Result()
-	switch {
-	case err == redis.Nil:
-		return client.Insert(key, value)
-	case err != nil:
-		return ErrRedis
-	case val == "":
-		return client.Insert(key, value)
+// creates a set for a key and adds the value in set
+func (client *RedisClient) Append(key string, value string) error {
+
+	if err := client.RDB.SAdd(client.ctx, key, value).Err(); err != nil {
+		fmt.Errorf("Error adding url %s to key %s", value, key)
+		return err
 	}
 
-	x := []byte(val)
-	var data redisPayLoad
-
-	err = json.Unmarshal(x, &data)
-
-	if err != nil {
-		return ErrFormat
-	}
-
-	newPayload := append(data.Payload, value...)
-
-	return client.Insert(key, newPayload)
+	return nil
 }
 
 func (client *RedisClient) Get(key string) ([]string, error) {

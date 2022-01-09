@@ -33,7 +33,7 @@ func HttpServer(rootNode *trie.Node) {
 			})
 		}
 
-		urls, err := redis_crawler.Client.GetUnEncoded(search)
+		urls, err := redis_crawler.Client.GetSetValues(search)
 
 		if err != nil {
 			fmt.Println(err.Error())
@@ -79,6 +79,7 @@ func HttpServer(rootNode *trie.Node) {
 			})
 	})
 
+	// staring the http server
 	log.Fatal(app.Listen(":" + port))
 
 }
