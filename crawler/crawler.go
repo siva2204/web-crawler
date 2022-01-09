@@ -3,10 +3,10 @@ package crawler
 import (
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/siva2204/web-crawler/queue"
 	redis_crawler "github.com/siva2204/web-crawler/redis"
-
 )
 
 type HashMap struct {
@@ -16,10 +16,13 @@ type HashMap struct {
 
 // crawler bot type
 type Crawler struct {
-	Wg      sync.WaitGroup
-	Threads int
-	Queue   *queue.Queue
-	Hm      HashMap
+	Wg             sync.WaitGroup
+	Threads        int
+	Queue          *queue.Queue
+	Hm             HashMap
+	SeederListener chan int
+	IsPaused       bool
+	Ch             chan string
 }
 
 // run method starts crawling
@@ -31,14 +34,14 @@ func (c *Crawler) Run() {
 		return
 	}
 
-	ch := make(chan string, 10)
+	// ch := make(chan string, 10)
 
 	for i := 0; i < c.Threads; i++ {
 		c.Wg.Add(1)
 
 		go func() {
 			for {
-				url, ok := <-ch
+				url, ok := <-c.Ch
 
 				if !ok {
 					c.Wg.Done()
@@ -59,7 +62,11 @@ func (c *Crawler) Run() {
 					// return
 				}
 
-				go func(url string){
+				if len(urls) > 2 {
+					urls = urls[:2]
+				}
+
+				go func(url string) {
 					data, err := dataScrape(url)
 
 					if err != nil {
@@ -72,7 +79,7 @@ func (c *Crawler) Run() {
 
 					// for each token in data
 					for _, token := range data {
-						fmt.Printf("token: %s\n", token)
+						// fmt.Printf("token: %s\n", token)
 						redis_crawler.Client.Append(token, []string{url})
 					}
 				}(url)
@@ -97,17 +104,49 @@ func (c *Crawler) Run() {
 		}()
 	}
 
+	// isPaused  := false
+
+	go c.ListenForQueue()
+
+	for {
+		select {
+		case status := <-c.SeederListener:
+			fmt.Println("got a message : ", status)
+			switch status {
+			case 0:
+				fmt.Println("Continue")
+				// continue
+				c.IsPaused = false
+				go c.ListenForQueue()
+				break
+			case 1:
+				fmt.Println("Pausing")
+				// Pause
+				c.IsPaused = true
+				break
+			}
+		}
+	}
+
 	// traversing the queue
 	// BFS
+
+	close(c.Ch)
+	c.Wg.Wait()
+}
+
+func (c *Crawler) ListenForQueue() {
 	for {
+		if c.IsPaused {
+			fmt.Println("pausing !!!")
+			break
+		}
 		if c.Queue.Len() != 0 {
-			ch <- c.Queue.Dequeue()
+			c.Ch <- c.Queue.Dequeue()
 		}
 		// TODO
 		// implementing something to stop the crawling
 		// may be with select and one more stop channel
+		time.Sleep(time.Millisecond * 500)
 	}
-
-	close(ch)
-	c.Wg.Wait()
 }

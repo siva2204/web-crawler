@@ -11,7 +11,7 @@ import (
 	redis_crawler "github.com/siva2204/web-crawler/redis"
 )
 
-var threads = flag.Int("threads", 100, "number of crawler threads")
+var threads = flag.Int("threads", 2, "number of crawler threads")
 
 func main() {
 	// fmt.Println("work in progress")
@@ -20,17 +20,22 @@ func main() {
 	// redis_crawler.Client.Append("world", []string{"a", "b", "c"})
 	// redis_crawler.CreateClient(config.Getenv("REDIS_HOST"), config.Getenv("REDIS_PORT"))
 
-	crawler := crawler.Crawler{
+	crawlerBot := crawler.Crawler{
 		Threads: *threads,
 		Queue:   &queue.Queue{},
 		Hm: crawler.HashMap{
 			Hm: make(map[string]bool),
 		},
+		IsPaused: false,
+		Ch:       make(chan string, 50),
 	}
+	crawler.InitSeeder(&crawlerBot)
 
-	crawler.Queue.Enqueue("http://localhost:5000")
+	go crawlerBot.Run()
 
-	go crawler.Run()
+	go crawler.SeederInstance.Run()
+
+	crawlerBot.Queue.Enqueue("http://localhost:5000")
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
