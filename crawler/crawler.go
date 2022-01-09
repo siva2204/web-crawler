@@ -6,7 +6,7 @@ import (
 
 	"github.com/siva2204/web-crawler/queue"
 	redis_crawler "github.com/siva2204/web-crawler/redis"
-
+	"github.com/siva2204/web-crawler/trie"
 )
 
 type HashMap struct {
@@ -23,7 +23,7 @@ type Crawler struct {
 }
 
 // run method starts crawling
-func (c *Crawler) Run() {
+func (c *Crawler) Run(rootNode *trie.Node) {
 	// check if the url is already crawled
 
 	if c.Queue.Len() == 0 {
@@ -59,7 +59,7 @@ func (c *Crawler) Run() {
 					// return
 				}
 
-				go func(url string){
+				go func(url string) {
 					data, err := dataScrape(url)
 
 					if err != nil {
@@ -74,6 +74,9 @@ func (c *Crawler) Run() {
 					for _, token := range data {
 						redis_crawler.Client.Append(token, []string{url})
 					}
+
+					go rootNode.Insert(data, url)
+
 				}(url)
 
 				c.Hm.Lock()

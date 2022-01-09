@@ -9,6 +9,7 @@ import (
 	"github.com/siva2204/web-crawler/crawler"
 	"github.com/siva2204/web-crawler/queue"
 	redis_crawler "github.com/siva2204/web-crawler/redis"
+	"github.com/siva2204/web-crawler/trie"
 )
 
 var threads = flag.Int("threads", 100, "number of crawler threads")
@@ -28,9 +29,11 @@ func main() {
 		},
 	}
 
+	rootNode := trie.NewNode()
+
 	crawler.Queue.Enqueue(config.Getenv("SEED_URL"))
 
-	go crawler.Run()
+	go crawler.Run(rootNode)
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
