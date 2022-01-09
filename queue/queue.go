@@ -38,11 +38,12 @@ func (ll *Queue) Enqueue(n string) {
 
 // dequeue it will be removed the first value into queue (First In First Out)
 func (ll *Queue) Dequeue() string {
-	ll.Lock()
-	defer ll.Unlock()
 	if ll.IsEmpty() {
 		return "" // if is empty return -1
 	}
+
+	ll.Lock()
+	defer ll.Unlock()
 	data := ll.head.url
 
 	ll.head = ll.head.next

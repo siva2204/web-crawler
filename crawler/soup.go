@@ -1,6 +1,7 @@
 package crawler
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"regexp"
@@ -16,17 +17,18 @@ func uRLScrape(url string) ([]string, error) {
 	// Request the HTML page.
 	res, err := http.Get(url)
 	if err != nil {
-		log.Fatal(err)
+		return []string{}, err
 	}
 	defer res.Body.Close()
+
 	if res.StatusCode != 200 {
-		log.Fatalf("status code error: %d %s", res.StatusCode, res.Status)
+		return []string{}, fmt.Errorf("error status code %d", res.StatusCode)
 	}
 
 	// Load the HTML document
 	doc, err := goquery.NewDocumentFromReader(res.Body)
 	if err != nil {
-		log.Fatal(err)
+		return []string{}, err
 	}
 
 	// array of url
@@ -42,7 +44,7 @@ func uRLScrape(url string) ([]string, error) {
 	return urls, nil
 }
 
-func PDataScrape(url string) (
+func dataScrape(url string) (
 	[]string, error) {
 	// Request the HTML page.
 	res, err := http.Get(url)
