@@ -43,5 +43,5 @@ migarte -path "./migrations"  -database "mysql://root:YOUR_MYSQL_PASSWORD@/webcr
 
   - production
     ```bash
-    go run main.go
+    go run main.go --threads <no of threads>
     ```
