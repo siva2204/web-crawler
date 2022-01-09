@@ -124,3 +124,21 @@ func (client *RedisClient) Get(key string) ([]string, error) {
 	return data.Payload, nil
 
 }
+
+func (client *RedisClient) AutoComplete(key string) ([]string, error) {
+	var cursor uint64
+	fullkeys := []string{}
+	for {
+		var keys []string
+		var err error
+		keys, cursor, err = client.RDB.Scan(client.ctx, cursor, key+"*", 10).Result()
+		if err != nil {
+			return []string{}, ErrRedis
+		}
+		if cursor == 0 {
+			break
+		}
+		fullkeys = append(fullkeys, keys...)
+	}
+	return fullkeys, nil
+}

@@ -61,7 +61,16 @@ func HttpServer(rootNode *trie.Node) {
 			})
 		}
 
-		words := rootNode.AutoCompletePrefix(search)
+		words, err := redis_crawler.Client.AutoComplete(search)
+
+		if err != nil {
+			fmt.Println(err.Error())
+			return c.Status(204).JSON(
+				response{
+					Status: false,
+					Data:   err.Error(),
+				})
+		}
 
 		return c.Status(200).JSON(
 			response{
