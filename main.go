@@ -1,12 +1,11 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
-	"net/http"
 
 	"github.com/siva2204/web-crawler/config"
 	"github.com/siva2204/web-crawler/crawler"
+	"github.com/siva2204/web-crawler/httpapi"
 	"github.com/siva2204/web-crawler/queue"
 	redis_crawler "github.com/siva2204/web-crawler/redis"
 	"github.com/siva2204/web-crawler/trie"
@@ -30,29 +29,9 @@ func main() {
 	}
 
 	rootNode := trie.NewNode()
-
 	crawler.Queue.Enqueue(config.Getenv("SEED_URL"))
 
 	go crawler.Run(rootNode)
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == "GET" {
-			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
-		}
-	})
-
-	http.HandleFunc("/search", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == "GET" {
-			w.Header().Set("Content-Type", "application/json")
-			urls, err := redis_crawler.Client.GetUnEncoded("hello")
-			if err != nil {
-				json.NewEncoder(w).Encode(map[string]string{"status": "error"})
-			} else {
-				json.NewEncoder(w).Encode(urls)
-			}
-		}
-	})
-
-	http.ListenAndServe(":7000", nil)
+	httpapi.HttpServer()
 }

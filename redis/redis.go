@@ -27,18 +27,18 @@ type redisPayLoad struct {
 
 var Client *RedisClient
 
-func (client *RedisClient) GetUnEncoded(key string) ([]byte, error) {
+func (client *RedisClient) GetUnEncoded(key string) (string, error) {
 	val, err := client.RDB.Get(client.ctx, key).Result()
 	switch {
 	case err == redis.Nil:
-		return []byte{}, ErrInvalidKey
+		return "", ErrInvalidKey
 	case err != nil:
-		return []byte{}, ErrRedis
+		return "", ErrRedis
 	case val == "":
-		return []byte{}, ErrEmptyValue
+		return "", ErrEmptyValue
 	}
 
-	x := []byte(val)
+	x := val
 
 	return x, nil
 }
