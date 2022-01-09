@@ -72,7 +72,6 @@ func (c *Crawler) Run() {
 
 					// for each token in data
 					for _, token := range data {
-						fmt.Printf("token: %s\n", token)
 						redis_crawler.Client.Append(token, []string{url})
 					}
 				}(url)

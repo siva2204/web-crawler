@@ -28,7 +28,7 @@ func main() {
 		},
 	}
 
-	crawler.Queue.Enqueue("http://localhost:5000")
+	crawler.Queue.Enqueue(config.Getenv("SEED_URL"))
 
 	go crawler.Run()
 
