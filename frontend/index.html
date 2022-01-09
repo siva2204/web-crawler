@@ -229,9 +229,7 @@
         word = document.querySelector("#box").value;
         document.querySelector("section").innerText = "Searching...";
         let timeStart = Date.now();
-        let { data } = await axios.post("/search/trie", {
-          word,
-        });
+        let { data } = await axios.post("/search/" + word);
         let timeEnd = Date.now();
         let ele = document.querySelector("#links");
         ele.innerHTML = "";
