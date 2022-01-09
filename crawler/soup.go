@@ -97,6 +97,10 @@ func dataScrape(url string) (
 }
 
 func MetaScrape(url string) (string, string, error) {
+
+	var description string
+	var title string
+
 	// Request the HTML page.
 	res, err := http.Get(url)
 	if err != nil {
@@ -113,17 +117,13 @@ func MetaScrape(url string) (string, string, error) {
 		return "", "", err
 	}
 
+	text := doc.Text() // s.Text()
+
+	cleanContent := stopwords.CleanString(text, "en", true)
+
+	description = cleanContent[0:100]
+
 	// array of url
-
-	var description string
-	var title string
-
-	// Find the review items
-	doc.Find("meta").Each(func(i int, s *goquery.Selection) {
-		if name, _ := s.Attr("name"); name == "description" {
-			description, _ = s.Attr("content")
-		}
-	})
 
 	doc.Find("title").Each(func(i int, s *goquery.Selection) {
 		title = s.Text()

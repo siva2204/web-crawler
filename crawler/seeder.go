@@ -42,7 +42,7 @@ func (s *Seeder) Run() {
 	db.PersistIndex(keys, values)
 
 	// flushing redis after persisting in mysql db
-	redis_crawler.Client.RDB.FlushAll(redis_crawler.Client.RDB.Context())
+	// redis_crawler.Client.RDB.FlushAll(redis_crawler.Client.RDB.Context())
 
 	time.Sleep(time.Second * 5)
 

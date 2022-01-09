@@ -6,6 +6,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/siva2204/web-crawler/config"
+	"github.com/siva2204/web-crawler/crawler"
 	redis_crawler "github.com/siva2204/web-crawler/redis"
 	"github.com/siva2204/web-crawler/trie"
 )
@@ -44,10 +45,43 @@ func HttpServer(rootNode *trie.Node) {
 				})
 		}
 
+		type urldata struct {
+			Url         string `json:"url"`
+			Title       string `json:"title`
+			Description string `json:"description`
+		}
+
+		var data []urldata
+
+		fmt.Println(urls)
+
+		for _, k := range urls {
+
+			newUrldata := urldata{
+				Url:         k,
+				Title:       "",
+				Description: "",
+			}
+
+			title, descp, err := crawler.MetaScrape(k)
+
+			if err != nil {
+				fmt.Errorf("error scraping from %s url", k)
+			}
+
+			newUrldata.Title = title
+			newUrldata.Description = descp
+
+			data = append(data, newUrldata)
+
+		}
+
+		fmt.Println(data)
+
 		return c.Status(200).JSON(
 			response{
 				Status: true,
-				Data:   urls,
+				Data:   data,
 			})
 	})
 

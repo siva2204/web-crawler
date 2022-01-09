@@ -146,6 +146,6 @@ func (c *Crawler) ListenForQueue() {
 		// TODO
 		// implementing something to stop the crawling
 		// may be with select and one more stop channel
-		time.Sleep(time.Millisecond * 1500)
+		time.Sleep(time.Millisecond * 15)
 	}
 }
