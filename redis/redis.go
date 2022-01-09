@@ -126,3 +126,41 @@ func (client *RedisClient) AutoComplete(key string) ([]string, error) {
 	}
 	return fullkeys, nil
 }
+func (client *RedisClient) GetAll() ([]string, error) {
+
+	dataSet := []string{}
+
+	iter := client.RDB.Scan(client.ctx, 0, "*", 0).Iterator()
+	for iter.Next(client.ctx) {
+		dataSet = append(dataSet, iter.Val())
+	}
+
+	if err := iter.Err(); err != nil {
+		return dataSet, err
+	}
+
+	return dataSet, nil
+}
+
+func (client *RedisClient) GetMany(keys []string) ([][]string, error) {
+
+	mget := client.RDB.MGet(client.ctx, keys...)
+
+	if err := mget.Err(); err != nil {
+		fmt.Println("err", err)
+		return [][]string{}, ErrRedis
+	}
+
+	data := mget.Val()
+
+	values := [][]string{}
+
+	for _, x := range data {
+		var singleData redisPayLoad
+		json.Unmarshal([]byte(fmt.Sprintf("%v", x)), &singleData)
+		values = append(values, singleData.Payload)
+	}
+
+	return values, nil
+
+}
