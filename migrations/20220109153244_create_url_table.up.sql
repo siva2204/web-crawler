@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS Url(
+    keyId bigint UNSIGNED NOT NULL,
+    `url` varchar(255) UNIQUE,
+    FOREIGN KEY(keyId) REFERENCES `Key`(id)
+) AUTO_INCREMENT=1;
