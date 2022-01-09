@@ -1,12 +1,13 @@
 package main
 
 import (
+	"encoding/json"
+	"net/http"
+
+	"github.com/siva2204/web-crawler/config"
 	"github.com/siva2204/web-crawler/crawler"
 	"github.com/siva2204/web-crawler/queue"
 	redis_crawler "github.com/siva2204/web-crawler/redis"
-	"github.com/siva2204/web-crawler/config"
-	"net/http"
-	"encoding/json"
 )
 
 func main() {
@@ -14,6 +15,7 @@ func main() {
 	redis_crawler.CreateClient(config.Getenv("REDIS_HOST"), config.Getenv("REDIS_PORT"))
 	// redis_crawler.Client.Insert("hello", []string{"a", "b", "c"})
 	// redis_crawler.Client.Append("world", []string{"a", "b", "c"})
+	// redis_crawler.CreateClient(config.Getenv("REDIS_HOST"), config.Getenv("REDIS_PORT"))
 
 	crawler := crawler.Crawler{
 		Threads: 100,
@@ -28,14 +30,14 @@ func main() {
 	go crawler.Run()
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		if(r.Method == "GET") {
+		if r.Method == "GET" {
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
 		}
 	})
 
 	http.HandleFunc("/search", func(w http.ResponseWriter, r *http.Request) {
-		if(r.Method == "GET") {
+		if r.Method == "GET" {
 			w.Header().Set("Content-Type", "application/json")
 			urls, err := redis_crawler.Client.GetUnEncoded("hello")
 			if err != nil {
