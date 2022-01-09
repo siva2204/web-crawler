@@ -32,13 +32,13 @@ func main() {
 	crawler.InitSeeder(&crawlerBot)
 
 	rootNode := trie.NewNode()
-	crawler.Queue.Enqueue(config.Getenv("SEED_URL"))
+	crawlerBot.Queue.Enqueue(config.Getenv("SEED_URL"))
 
-	go crawler.Run(rootNode)
+	go crawlerBot.Run(rootNode)
 
 	go crawler.SeederInstance.Run()
 
-	crawler.Queue.Enqueue(config.Getenv("SEED_URL"))
+	crawlerBot.Queue.Enqueue(config.Getenv("SEED_URL"))
 
 	httpapi.HttpServer(rootNode)
 }
