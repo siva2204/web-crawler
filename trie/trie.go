@@ -1,13 +1,15 @@
 package trie
 
 import (
+	"fmt"
 	"unicode/utf8"
 )
 
 // Node represents each node in Trie.
 type Node struct {
 	children map[rune]*Node // map children nodes
-	isLeaf   []string       // current node value
+	urls     []string       // current node value
+	isleaf   bool           // is current node a leaf node
 }
 
 // NewNode creates a new Trie node with initialized
@@ -15,12 +17,14 @@ type Node struct {
 func NewNode() *Node {
 	n := &Node{}
 	n.children = make(map[rune]*Node)
-	n.isLeaf = []string{}
+	n.urls = []string{}
+	n.isleaf = false
 	return n
 }
 
 // insert a single word at a Trie node.
 func (n *Node) insert(s string, url string) {
+	fmt.Println("inserting", s)
 	curr := n
 	for _, c := range s {
 		next, ok := curr.children[c]
@@ -30,7 +34,8 @@ func (n *Node) insert(s string, url string) {
 		}
 		curr = next
 	}
-	curr.isLeaf = append(curr.isLeaf, url)
+	curr.urls = append(curr.urls, url)
+	curr.isleaf = true
 }
 
 // Insert zero, one or more words at a Trie node.
@@ -49,7 +54,7 @@ func (n *Node) Find(s string) []string {
 			return []string{}
 		}
 	}
-	return next.isLeaf
+	return next.urls
 }
 
 // Capacity returns the number of nodes in the Trie
@@ -67,45 +72,11 @@ func (n *Node) Size() int {
 	for _, c := range n.children {
 		r += c.Size()
 	}
-	if n.isLeaf != nil {
+	if n.isleaf {
 		r++
 	}
 	return r
 }
-
-// remove lazily a word from the Trie node, no node is actually removed.
-// func (n *Node) remove(s string) {
-// 	if len(s) == 0 {
-// 		return
-// 	}
-// 	next, ok := n, false
-// 	for _, c := range s {
-// 		next, ok = next.children[c]
-// 		if !ok {
-// 			// word cannot be found - we're done !
-// 			return
-// 		}
-// 	}
-// 	next.isLeaf =
-// }
-
-// // Remove zero, one or more words lazily from the Trie, no node is actually removed.
-// func (n *Node) Remove(s ...string) {
-// 	for _, ss := range s {
-// 		n.remove(ss)
-// 	}
-// }
-
-// // Compact will remove unecessay nodes, reducing the capacity, returning true if node n itself should be removed.
-// func (n *Node) Compact() (remove bool) {
-
-// 	for r, c := range n.children {
-// 		if c.Compact() {
-// 			delete(n.children, r)
-// 		}
-// 	}
-// 	return !n.isLeaf && len(n.children) == 0
-// }
 
 func FindSubTrieByPrefix(root *Node, prefix string) *Node {
 	if prefix == "" {
@@ -128,14 +99,14 @@ func SearchSubTree(root *Node, texts *[]string, prefix string) {
 	}
 	for k, node := range root.children {
 		var newPrefix string = prefix + string(k)
-		if node.isLeaf != nil {
+		if node.isleaf {
 			*texts = append(*texts, newPrefix)
 		}
 		SearchSubTree(node, texts, newPrefix)
 	}
 }
 
-func AutoCompletePrefix(root *Node, prefix string) []string {
+func (root *Node) AutoCompletePrefix(prefix string) []string {
 	subTrie := FindSubTrieByPrefix(root, prefix)
 	var prefixes []string
 	SearchSubTree(subTrie, &prefixes, prefix)

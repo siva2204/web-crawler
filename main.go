@@ -33,5 +33,5 @@ func main() {
 
 	go crawler.Run(rootNode)
 
-	httpapi.HttpServer()
+	httpapi.HttpServer(rootNode)
 }

@@ -46,7 +46,6 @@
         font: 16px Arial;
       }
 
-      /*the container must be positioned relative:*/
       .autocomplete {
         position: relative;
         display: inline-block;
@@ -94,10 +93,6 @@
         bottom: 10px;
       }
 
-      #pages {
-        right: 10px;
-      }
-
       .autocomplete-items {
         position: absolute;
         border: 1px solid #d4d4d4;
@@ -116,12 +111,10 @@
         border-bottom: 1px solid #d4d4d4;
       }
 
-      /*when hovering an item:*/
       .autocomplete-items div:hover {
         background-color: #e9e9e9;
       }
 
-      /*when navigating through the items using the arrow keys:*/
       .autocomplete-active {
         background-color: DodgerBlue !important;
         color: #ffffff;
@@ -134,15 +127,11 @@
         <div class="autocomplete" style="width: 300px">
           <input id="box" type="text" placeholder="Search" />
         </div>
-        <input type="submit" id="buttonTrie" value="search Trie" />
-        <input type="submit" id="buttonRadix" value="search Radix" />
-        <input type="submit" id="buttonMap" value="search map" />
+        <input type="submit" id="search-button" value="search" />
         <section>Enter Something</section>
       </form>
     </div>
     <div id="links"></div>
-    <a href="/index.html"><button id="pages">Pages</button></a>
-    <a href="/chart/index.html"><button id="chart">Chart</button></a>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.20.0/axios.min.js"></script>
     <script>
       function autocomplete(inp) {
@@ -152,10 +141,9 @@
             b,
             i,
             val = this.value;
-          let { data } = await axios.post("/words", {
-            snip: val,
-          });
-          arr = data.slice(0, 100);
+          let { data } = await axios.post("/words/"+val);
+          data = data.data
+          arr = data.slice(0, 30);
           closeAllLists();
           if (!val) {
             return false;
@@ -224,12 +212,15 @@
       }
       autocomplete(document.getElementById("box"));
 
-      document.querySelector("#buttonTrie").onclick = async (e) => {
+      document.querySelector("#search-button").onclick = async (e) => {
         e.preventDefault();
         word = document.querySelector("#box").value;
         document.querySelector("section").innerText = "Searching...";
         let timeStart = Date.now();
-        let { data } = await axios.post("/search/" + word);
+        let { data } = await axios.get("/search/" + word);
+      
+        data = JSON.parse(data.data)['Payload'];
+        data = [...new Set(data)];
         let timeEnd = Date.now();
         let ele = document.querySelector("#links");
         ele.innerHTML = "";
@@ -247,58 +238,6 @@
         document.querySelector("section").innerText = `Found ${
           data.length
         } results in ${timeEnd - timeStart}ms using trie`;
-      };
-      document.querySelector("#buttonRadix").onclick = async (e) => {
-        e.preventDefault();
-        word = document.querySelector("#box").value;
-        document.querySelector("section").innerText = "Searching...";
-        let timeStart = Date.now();
-        let { data } = await axios.post("/search/radix", {
-          word,
-        });
-        let ele = document.querySelector("#links");
-        ele.innerHTML = "";
-        for (var i = 0; i < data.length; i++) {
-          var aside = document.createElement("aside");
-          var a = document.createElement("a");
-          var link = document.createTextNode(`${data[i]}`);
-          a.appendChild(link);
-          a.target = "_blank";
-          a.href = `${data[i]}`;
-          aside.appendChild(a);
-          ele.appendChild(aside);
-        }
-        let timeEnd = Date.now();
-        data.length ? (ele.style.display = "block") : null;
-        document.querySelector("section").innerText = `Found ${
-          data.length
-        } results in ${timeEnd - timeStart}ms using radix tree`;
-      };
-      document.querySelector("#buttonMap").onclick = async (e) => {
-        e.preventDefault();
-        word = document.querySelector("#box").value;
-        document.querySelector("section").innerText = "Searching...";
-        let timeStart = Date.now();
-        let { data } = await axios.post("/search/map", {
-          word,
-        });
-        let timeEnd = Date.now();
-        let ele = document.querySelector("#links");
-        ele.innerHTML = "";
-        for (var i = 0; i < data.length; i++) {
-          var aside = document.createElement("aside");
-          var a = document.createElement("a");
-          var link = document.createTextNode(`${data[i]}`);
-          a.appendChild(link);
-          a.target = "_blank";
-          a.href = `${data[i]}`;
-          aside.appendChild(a);
-          ele.appendChild(aside);
-        }
-        data.length ? (ele.style.display = "block") : null;
-        document.querySelector("section").innerText = `Found ${
-          data.length
-        } results in ${timeEnd - timeStart}ms using map`;
       };
     </script>
   </body>

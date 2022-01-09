@@ -7,6 +7,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/siva2204/web-crawler/config"
 	redis_crawler "github.com/siva2204/web-crawler/redis"
+	"github.com/siva2204/web-crawler/trie"
 )
 
 type response struct {
@@ -14,7 +15,7 @@ type response struct {
 	Data   interface{} `json:"data"`
 }
 
-func HttpServer() {
+func HttpServer(rootNode *trie.Node) {
 	app := fiber.New()
 	port := config.Getenv("PORT")
 
@@ -35,7 +36,8 @@ func HttpServer() {
 		urls, err := redis_crawler.Client.GetUnEncoded(search)
 
 		if err != nil {
-			return c.Status(500).JSON(
+			fmt.Println(err.Error())
+			return c.Status(204).JSON(
 				response{
 					Status: false,
 					Data:   err.Error(),
@@ -46,6 +48,25 @@ func HttpServer() {
 			response{
 				Status: true,
 				Data:   urls,
+			})
+	})
+
+	app.Post("/words/:param", func(c *fiber.Ctx) error {
+		search := c.Params("param")
+
+		if search == "" {
+			return c.Status(400).JSON(response{
+				Status: false,
+				Data:   "empty param",
+			})
+		}
+
+		words := rootNode.AutoCompletePrefix(search)
+
+		return c.Status(200).JSON(
+			response{
+				Status: true,
+				Data:   words,
 			})
 	})
 
