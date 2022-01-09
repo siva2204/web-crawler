@@ -18,9 +18,7 @@ func HttpServer() {
 	app := fiber.New()
 	port := config.Getenv("PORT")
 
-	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString(" Hello john 👋")
-	})
+	app.Static("/", "./frontend")
 
 	app.Get("/search/:param", func(c *fiber.Ctx) error {
 		search := c.Params("param")
