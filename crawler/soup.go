@@ -1,17 +1,18 @@
-package main
+package crawler
 
 import (
-	"regexp"
 	"log"
 	"net/http"
+	"regexp"
+
 	"github.com/PuerkitoBio/goquery"
-	"github.com/jdkato/prose/v2"
 	"github.com/bbalet/stopwords"
+	"github.com/jdkato/prose/v2"
 )
 
 var IsLetter = regexp.MustCompile(`^[a-z]+$`).MatchString
 
-func URLScrape(url string) ([]string, error) {
+func uRLScrape(url string) ([]string, error) {
 	// Request the HTML page.
 	res, err := http.Get(url)
 	if err != nil {
@@ -31,9 +32,8 @@ func URLScrape(url string) ([]string, error) {
 	// array of url
 	var urls []string
 
-
 	// Find the review items
-	doc.Find("a").Each(func(i int , s *goquery.Selection) {
+	doc.Find("a").Each(func(i int, s *goquery.Selection) {
 		// For each item found, get the href
 		href, _ := s.Attr("href")
 		// push url to array
@@ -63,37 +63,26 @@ func PDataScrape(url string) (
 	// array of url
 	var wordArray []string
 
-
 	// Find the review items
 	// doc.Find("p").Each(func(i int , s *goquery.Selection) {
-		// For each item found, get the text
-		text := doc.Text() // s.Text()
+	// For each item found, get the text
+	text := doc.Text() // s.Text()
 
-		//Return a string where HTML tags and French stop words has been removed
-		cleanContent := stopwords.CleanString(text, "en", true)
+	//Return a string where HTML tags and French stop words has been removed
+	cleanContent := stopwords.CleanString(text, "en", true)
 
-		data, err := prose.NewDocument(cleanContent)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		// Iterate over the doc's tokens:
-		for _, tok := range data.Tokens() {
-			// log.Println(tok.Text, tok.Tag, tok.Label)
-			if IsLetter(tok.Text) {
-				wordArray = append(wordArray, tok.Text)
-			}
-		}
-	// })
-	return wordArray, nil
-}
-
-func main(){
-	urls, err := PDataScrape("http://localhost:5000/compellingly-embrace-from-generation-x-is")
+	data, err := prose.NewDocument(cleanContent)
 	if err != nil {
 		log.Fatal(err)
 	}
-	for _, url := range urls {
-		log.Println(url)
+
+	// Iterate over the doc's tokens:
+	for _, tok := range data.Tokens() {
+		// log.Println(tok.Text, tok.Tag, tok.Label)
+		if IsLetter(tok.Text) {
+			wordArray = append(wordArray, tok.Text)
+		}
 	}
+	// })
+	return wordArray, nil
 }
