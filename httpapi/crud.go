@@ -135,13 +135,22 @@ func HttpServer(rootNode *trie.Node, graph *pagerank.PageRank) {
 		tolerance := 0.0001                     // the smaller the number, the more exact the result will be but more CPU cycles will be needed
 		ranks := map[string]float64{}
 		graph.Rank(probability_of_following_a_link, tolerance, func(url string, rank float64) {
-			ranks[url] = rank
+			db.AddPageRank(url, rank)
 		})
 		return c.Status(200).JSON(
 			response{
 				Status: true,
 				Data:   ranks,
 			})
+	})
+
+	app.Get("/data", func(c *fiber.Ctx) error {
+		file := "../static/data/site_data.json"
+		return c.JSON(response{
+			Status: true,
+			Data:   file,
+		})
+
 	})
 
 	// staring the http server

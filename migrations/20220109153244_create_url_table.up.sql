@@ -1,5 +1,6 @@
 CREATE TABLE IF NOT EXISTS Url(
     id bigint UNSIGNED NOT NULL AUTO_INCREMENT,
     `url` varchar(255) UNIQUE,
+    `rank` float DEFAULT 0,
     PRIMARY KEY(id)
 ) AUTO_INCREMENT=1;
