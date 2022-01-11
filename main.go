@@ -56,6 +56,7 @@ func main() {
 	urlsRepository.Init()
 
 	urlsRepository.CreateUrl("https://www.google.com/")
+	urlsRepository.CreateUrl("https://www.bing.com/")
 
 	urlsRepository.AddPageRank(&urls.URL{
 		URL:  "https://www.google.com/",
@@ -63,6 +64,8 @@ func main() {
 	})
 
 	rank, _ := urlsRepository.GetPageRank("https://www.google.com/")
+
+	urlsRepository.ConnectTwoUrls("https://www.google.com/", "https://www.bing.com/")
 
 	fmt.Printf("Page rank: %f\n", rank)
 

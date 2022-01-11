@@ -39,17 +39,19 @@ func (u *Neo4jRepository) CreateUrl(url string) error {
 }
 
 func (u *Neo4jRepository) createUrl(tx neo4j.Transaction, url *URL) (interface{}, error) {
-	result, err := tx.Run("CREATE (u:URL {url: $url.URL, rank: $url.RANK}) RETURN u", map[string]interface{}{
-		"url": url,
+	result, err := tx.Run("CREATE (n:URL {url: $url, rank: $rank}) RETURN n", map[string]interface{}{
+		"url":  url.URL,
+		"rank": url.RANK,
 	})
 	if err != nil {
 		return nil, err
 	}
-	record, err := result.Single()
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(record, "sds")
+	if err != nil {
+		return nil, err
+	}
 	return result.Next(), nil
 }
 
@@ -74,6 +76,9 @@ func (u *Neo4jRepository) addPageRank(tx neo4j.Transaction, url *URL) (interface
 		"url":  url.URL,
 		"rank": url.RANK,
 	})
+	if err != nil {
+		fmt.Println(err)
+	}
 	return nil, err
 }
 
@@ -100,6 +105,37 @@ func (u *Neo4jRepository) getPageRank(tx neo4j.Transaction, url string) (interfa
 	if err != nil {
 		return nil, err
 	}
-	// fmt.Println(result.Single())
-	return result.Next(), nil
+	for result.Next() {
+		record := result.Record()
+		fmt.Println(record.Values[0])
+	}
+
+	return result, nil
+}
+
+func (u *Neo4jRepository) ConnectTwoUrls(url1 string, url2 string) error {
+	session := u.Driver.NewSession(neo4j.SessionConfig{
+		AccessMode: neo4j.AccessModeWrite,
+	})
+	defer func() {
+		_ = session.Close()
+	}()
+	if _, err := session.
+		WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+			return u.connectTwoUrls(tx, url1, url2)
+		}); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *Neo4jRepository) connectTwoUrls(tx neo4j.Transaction, url1 string, url2 string) (interface{}, error) {
+	result, err := tx.Run("MATCH (n:URL {url: $url1}), (m:URL {url: $url2}) MERGE (n)-[:LINK]->(m)", map[string]interface{}{
+		"url1": url1,
+		"url2": url2,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }
