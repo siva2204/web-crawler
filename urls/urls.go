@@ -61,20 +61,16 @@ func (u *Neo4jRepository) CreateUrl(url string) error {
 	}()
 	if _, err := session.
 		WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
-			return u.createUrl(tx, &URL{
-				URL:  url,
-				RANK: 0,
-			})
+			return u.createUrl(tx, url)
 		}); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (u *Neo4jRepository) createUrl(tx neo4j.Transaction, url *URL) (interface{}, error) {
-	result, err := tx.Run("CREATE (n:URL {url: $url, rank: $rank}) RETURN n", map[string]interface{}{
-		"url":  url.URL,
-		"rank": url.RANK,
+func (u *Neo4jRepository) createUrl(tx neo4j.Transaction, url string) (interface{}, error) {
+	result, err := tx.Run("MERGE (n:URL {url: $url}) RETURN n", map[string]interface{}{
+		"url": url,
 	})
 	if err != nil {
 		return nil, err
@@ -82,12 +78,12 @@ func (u *Neo4jRepository) createUrl(tx neo4j.Transaction, url *URL) (interface{}
 	return result.Next(), nil
 }
 
-func (u *Neo4jRepository) AddPageRank(url *URL) (err error) {
+func (u *Neo4jRepository) AddPageRank(url *URL) error {
 	session := u.Driver.NewSession(neo4j.SessionConfig{
 		AccessMode: neo4j.AccessModeWrite,
 	})
 	defer func() {
-		err = session.Close()
+		_ = session.Close()
 	}()
 	if _, err := session.
 		WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
@@ -109,35 +105,36 @@ func (u *Neo4jRepository) addPageRank(tx neo4j.Transaction, url *URL) (interface
 	return nil, err
 }
 
-func (u *Neo4jRepository) GetPageRank(url string) (rank float64, err error) {
+func (u *Neo4jRepository) GetPageRank(url string) (float64, error) {
 	session := u.Driver.NewSession(neo4j.SessionConfig{
 		AccessMode: neo4j.AccessModeWrite,
 	})
 	defer func() {
-		err = session.Close()
+		_ = session.Close()
 	}()
-	if _, err := session.
+	rank, err := session.
 		ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 			return u.getPageRank(tx, url)
-		}); err != nil {
-		return 0, err
+		})
+	if err != nil {
+		return float64(0), err
 	}
-	return rank, nil
+
+	return rank.(float64), nil
 }
 
-func (u *Neo4jRepository) getPageRank(tx neo4j.Transaction, url string) (interface{}, error) {
+func (u *Neo4jRepository) getPageRank(tx neo4j.Transaction, url string) (float64, error) {
 	result, err := tx.Run("MATCH (n:URL {url: $url}) RETURN n.rank", map[string]interface{}{
 		"url": url,
 	})
 	if err != nil {
-		return nil, err
-	}
-	for result.Next() {
-		record := result.Record()
-		fmt.Println(record.Values[0])
+		return float64(0), err
 	}
 
-	return result, nil
+	record, _ := result.Single()
+	rank, _ := record.Values[0].(float64)
+
+	return rank, nil
 }
 
 func (u *Neo4jRepository) ConnectTwoUrls(url1 string, url2 string) error {
@@ -167,29 +164,92 @@ func (u *Neo4jRepository) connectTwoUrls(tx neo4j.Transaction, url1 string, url2
 	return result, nil
 }
 
-// func (u *Neo4jRepository) ConnectTokenToUrl(url string, token string) error {
-// 	session := u.Driver.NewSession(neo4j.SessionConfig{
-// 		AccessMode: neo4j.AccessModeWrite,
-// 	})
-// 	defer func() {
-// 		_ = session.Close()
-// 	}()
-// 	if _, err := session.
-// 		WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
-// 			return u.connectTwoUrls(tx, url, token)
-// 		}); err != nil {
-// 		return err
-// 	}
-// 	return nil
-// }
+func (u *Neo4jRepository) GetUrls(url string) (urls []*URL, err error) {
+	session := u.Driver.NewSession(neo4j.SessionConfig{
+		AccessMode: neo4j.AccessModeWrite,
+	})
+	defer func() {
+		err = session.Close()
+	}()
+	if _, err := session.
+		ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+			return u.getUrls(tx, url)
+		}); err != nil {
+		return nil, err
+	}
+	return urls, nil
+}
 
-// func (u *Neo4jRepository) connectTokenToUrl(tx neo4j.Transaction, url string, token string) (interface{}, error) {
-// 	result, err := tx.Run("MATCH (n:URL {url: $url1}), (m:URL {url: $url2}) MERGE (n)-[:LINK]->(m)", map[string]interface{}{
-// 		"url1": url1,
-// 		"url2": url2,
-// 	})
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return result, nil
-// }
+func (u *Neo4jRepository) getUrls(tx neo4j.Transaction, url string) (interface{}, error) {
+	result, err := tx.Run("MATCH (n:URL {url: $url}) RETURN n.url", map[string]interface{}{
+		"url": url,
+	})
+	if err != nil {
+		return nil, err
+	}
+	for result.Next() {
+		record := result.Record()
+		fmt.Println(record.Values[0])
+	}
+
+	return result, nil
+}
+
+func (u *Neo4jRepository) GetConnectedUrls(url string) ([]*URL, error) {
+	session := u.Driver.NewSession(neo4j.SessionConfig{
+		AccessMode: neo4j.AccessModeWrite,
+	})
+	defer func() {
+		_ = session.Close()
+	}()
+	urls, _ := session.
+		ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+			return u.getConnectedUrls(tx, url)
+		})
+	return urls.([]*URL), nil
+}
+
+func (u *Neo4jRepository) getConnectedUrls(tx neo4j.Transaction, url string) ([]*URL, error) {
+	result, err := tx.Run("MATCH (n:URL {url: $url})-[:LINK]->(m:URL) RETURN m.url", map[string]interface{}{
+		"url": url,
+	})
+	if err != nil {
+		return nil, err
+	}
+	urls := make([]*URL, 0)
+	for result.Next() {
+		record := result.Record()
+		urls = append(urls, &URL{
+			URL: record.Values[0].(string),
+		})
+	}
+
+	return urls, nil
+}
+
+func (u *Neo4jRepository) ConnectTokenAndUrl(token string, url string) error {
+	session := u.Driver.NewSession(neo4j.SessionConfig{
+		AccessMode: neo4j.AccessModeWrite,
+	})
+	defer func() {
+		_ = session.Close()
+	}()
+	if _, err := session.
+		WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+			return u.connectTokenAndUrl(tx, token, url)
+		}); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *Neo4jRepository) connectTokenAndUrl(tx neo4j.Transaction, token string, url string) (interface{}, error) {
+	result, err := tx.Run("MATCH (n:Token {token: $token}) WITH n (m:URL {url: $url}) MERGE (n)-[:FOUNDIN]->(m)", map[string]interface{}{
+		"token": token,
+		"url":   url,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}

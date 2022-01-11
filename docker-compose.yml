@@ -8,6 +8,8 @@ services:
     restart: "always"
     ports:
       - '6379:6379'
+    volumes:
+      - './redis:/data'
   neo4j:
     image: neo4j:3.5
     restart: unless-stopped

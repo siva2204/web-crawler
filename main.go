@@ -67,9 +67,17 @@ func main() {
 
 	urlsRepository.ConnectTwoUrls("https://www.google.com/", "https://www.bing.com/")
 
-	fmt.Printf("Page rank: %f\n", rank)
+	urls, _ := urlsRepository.GetConnectedUrls("https://www.google.com/")
 
-	fmt.Println("Starting http server", urlsRepository)
+	for _, url := range urls {
+		fmt.Println(url.URL)
+	}
+
+	urlsRepository.CreateToken("token")
+
+	urlsRepository.ConnectTokenAndUrl("token", "https://www.google.com/")
+
+	fmt.Printf("Page rank: %f\n", rank)
 
 	graph := pagerank.New()
 

@@ -6,3 +6,4 @@ data/
 import/
 logs/
 plugins/
+redis/
