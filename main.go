@@ -8,6 +8,7 @@ import (
 	"github.com/siva2204/web-crawler/crawler"
 	"github.com/siva2204/web-crawler/db"
 	"github.com/siva2204/web-crawler/httpapi"
+	"github.com/siva2204/web-crawler/pagerank"
 	"github.com/siva2204/web-crawler/queue"
 	redis_crawler "github.com/siva2204/web-crawler/redis"
 	"github.com/siva2204/web-crawler/trie"
@@ -32,12 +33,14 @@ func main() {
 	}
 	crawler.InitSeeder(&crawlerBot)
 
+	graph := pagerank.New()
+
 	rootNode := trie.NewNode()
 	crawlerBot.Queue.Enqueue(config.Config.SeedUrl)
 
-	go crawlerBot.Run(rootNode)
+	go crawlerBot.Run(graph)
 
 	go crawler.SeederInstance.Run()
 
-	httpapi.HttpServer(rootNode)
+	httpapi.HttpServer(rootNode, graph)
 }

@@ -8,7 +8,8 @@ import (
 	"github.com/siva2204/web-crawler/config"
 	"github.com/siva2204/web-crawler/queue"
 	redis_crawler "github.com/siva2204/web-crawler/redis"
-	"github.com/siva2204/web-crawler/trie"
+
+	"github.com/siva2204/web-crawler/pagerank"
 )
 
 type HashMap struct {
@@ -28,7 +29,7 @@ type Crawler struct {
 }
 
 // run method starts crawling
-func (c *Crawler) Run(rootNode *trie.Node) {
+func (c *Crawler) Run(graph *pagerank.PageRank) {
 	// check if the url is already crawled
 
 	if c.Queue.Len() == 0 {
@@ -54,7 +55,7 @@ func (c *Crawler) Run(rootNode *trie.Node) {
 				fmt.Println()
 
 				// crawl with the url
-				urls, err := uRLScrape(url)
+				urls, err := uRLScrape(url, graph)
 
 				if err != nil {
 					fmt.Printf("Error crawling url %+v", err)

@@ -10,11 +10,12 @@ import (
 	"github.com/bbalet/stopwords"
 	"github.com/jdkato/prose/v2"
 	"github.com/siva2204/web-crawler/config"
+	"github.com/siva2204/web-crawler/pagerank"
 )
 
 var IsLetter = regexp.MustCompile(`^[a-z]+$`).MatchString
 
-func uRLScrape(url string) ([]string, error) {
+func uRLScrape(url string, graph *pagerank.PageRank) ([]string, error) {
 	// Request the HTML page.
 	res, err := http.Get(url)
 	if err != nil {
@@ -47,6 +48,7 @@ func uRLScrape(url string) ([]string, error) {
 			// push url to array
 			urls = append(urls, href)
 		}
+		graph.Link(url, href)
 	})
 	return urls, nil
 }

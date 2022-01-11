@@ -7,6 +7,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/siva2204/web-crawler/config"
 	"github.com/siva2204/web-crawler/crawler"
+	"github.com/siva2204/web-crawler/pagerank"
 	redis_crawler "github.com/siva2204/web-crawler/redis"
 	"github.com/siva2204/web-crawler/trie"
 )
@@ -16,7 +17,7 @@ type response struct {
 	Data   interface{} `json:"data"`
 }
 
-func HttpServer(rootNode *trie.Node) {
+func HttpServer(rootNode *trie.Node, graph *pagerank.PageRank) {
 	app := fiber.New()
 	port := config.Config.Port
 
@@ -110,6 +111,21 @@ func HttpServer(rootNode *trie.Node) {
 			response{
 				Status: true,
 				Data:   words,
+			})
+	})
+
+	// pagerank
+	app.Get("/runPageRank", func(c *fiber.Ctx) error {
+		probability_of_following_a_link := 0.85 // The bigger the number, less probability we have to teleport to some random link
+		tolerance := 0.0001                     // the smaller the number, the more exact the result will be but more CPU cycles will be needed
+		ranks := map[string]float64{}
+		graph.Rank(probability_of_following_a_link, tolerance, func(url string, rank float64) {
+			ranks[url] = rank
+		})
+		return c.Status(200).JSON(
+			response{
+				Status: true,
+				Data:   ranks,
 			})
 	})
 
