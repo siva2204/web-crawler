@@ -125,6 +125,7 @@ func HttpServer(rootNode *trie.Node, graph *pagerank.PageRank, urlsRepository *n
 		graph.Rank(probability_of_following_a_link, tolerance, func(url string, rank float64) {
 			// db.AddPageRank(url, rank)
 			urlsRepository.AddPageRank(url, rank)
+			ranks[url] = rank
 		})
 		return c.Status(200).JSON(
 			response{
