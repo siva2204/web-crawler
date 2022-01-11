@@ -1,27 +1,56 @@
 version: '3'
 
 services:
-  redis:
-    image: 'redis:5.0.7'
-    container_name: redis
-    command: redis-server
-    restart: "always"
+
+  crawler:
+    container_name: crawler
+    build: .
     ports:
-      - '6379:6379'
+      - '${PORT}:${PORT}'
+    restart: always
+    env_file:
+      - ./.env
+    depends_on:
+      - crawler_redis
+      - crawler_mysql
+      - crawler_neo4j
+
+
+  crawler_redis:
+    image: 'redis:5.0.7'
+    container_name: crawler_redis
+    restart: "always"
+    env_file:
+      - ./.env
+    ports:
+      - '${REDIS_PORT}:6379'
     volumes:
-      - './redis:/data'
-  neo4j:
+      - './docker/redis_volume:/data'
+
+  crawler_mysql:
+    image: mysql:8.0
+    container_name: crawler_mysql
+    volumes:
+      - ./docker/mysql_volume:/var/lib/mysql
+    restart: always
+    ports:
+      - '${DB_PORT}:3306'
+    env_file:
+      - ./.docker.env
+
+  crawler_neo4j:
     image: neo4j:3.5
+    container_name: crawler_neo4j
     restart: unless-stopped
     ports:
       - 7474:7474
       - 7687:7687
     volumes:
-      - ./conf:/conf
-      - ./data:/data
-      - ./import:/import
-      - ./logs:/logs
-      - ./plugins:/plugins
+      - ./docker/conf:/conf
+      - ./docker/data:/data
+      - ./docker/import:/import
+      - ./docker/logs:/logs
+      - ./docker/plugins:/plugins
     environment: 
       # Raise memory limits
       - NEO4J_dbms_memory_pagecache_size=1G
