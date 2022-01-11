@@ -1,6 +1,11 @@
 FROM golang:1.17
 
-WORKDIR  /go/src/github.com/delta/orientation-backend
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+    netcat \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR  /app
 
 RUN  go install -tags 'mysql' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
 

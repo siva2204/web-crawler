@@ -22,8 +22,6 @@ services:
     restart: "always"
     env_file:
       - ./.env
-    ports:
-      - '${REDIS_PORT}:6379'
     volumes:
       - './docker/redis_volume:/data'
 
