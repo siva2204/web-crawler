@@ -92,6 +92,12 @@ form button[type="submit"] {
 	font-size: 15px;
 	color: #888888dd;
 }
+
+.item .match {
+	font-size: 14px;
+	color: #888888aa;
+	padding-left: 1rem;
+}
 .item > .title {
 	font-size: 22px;
 }

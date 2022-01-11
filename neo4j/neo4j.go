@@ -11,10 +11,10 @@ type Neo4jRepository struct {
 }
 
 type URL struct {
-	URL         string
-	RANK        float64
-	DESCRIPTION string
-	TITLE       string
+	URL         string  `json:"url"`
+	RANK        float64 `json:"rank"`
+	DESCRIPTION string  `json:"description"`
+	TITLE       string  `json:"title"`
 }
 
 type TOKEN struct {
@@ -124,7 +124,8 @@ func (u *Neo4jRepository) getUrlsFromToken(tx neo4j.Transaction, token string) (
 	return urls, nil
 }
 
-func (u *Neo4jRepository) AddPageRank(url *URL) error {
+func (u *Neo4jRepository) AddPageRank(url string, rank float64) error {
+	fmt.Println("Got the page rank for ", url, " val : ", rank)
 	session := u.Driver.NewSession(neo4j.SessionConfig{
 		AccessMode: neo4j.AccessModeWrite,
 	})
@@ -133,7 +134,7 @@ func (u *Neo4jRepository) AddPageRank(url *URL) error {
 	}()
 	if _, err := session.
 		WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
-			return u.addPageRank(tx, url)
+			return u.addPageRank(tx, &URL{URL: url, RANK: rank})
 		}); err != nil {
 		return err
 	}

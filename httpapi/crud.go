@@ -9,7 +9,6 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/siva2204/web-crawler/config"
-	"github.com/siva2204/web-crawler/db"
 	neo4j_ "github.com/siva2204/web-crawler/neo4j"
 	"github.com/siva2204/web-crawler/pagerank"
 	redis_crawler "github.com/siva2204/web-crawler/redis"
@@ -124,7 +123,8 @@ func HttpServer(rootNode *trie.Node, graph *pagerank.PageRank, urlsRepository *n
 		tolerance := 0.0001                     // the smaller the number, the more exact the result will be but more CPU cycles will be needed
 		ranks := map[string]float64{}
 		graph.Rank(probability_of_following_a_link, tolerance, func(url string, rank float64) {
-			db.AddPageRank(url, rank)
+			// db.AddPageRank(url, rank)
+			urlsRepository.AddPageRank(url, rank)
 		})
 		return c.Status(200).JSON(
 			response{

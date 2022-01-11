@@ -93,13 +93,13 @@ func (c *Crawler) Run(graph *pagerank.PageRank, urlsRepository *neo4j_.Neo4jRepo
 					}(url)
 
 					go func(url string) {
-						description, tille, err := MetaScrape(url)
+						title, description, err := MetaScrape(url)
 
 						if err != nil {
 							fmt.Printf("Error getting description %+v", err)
 							fmt.Println()
 						}
-						urlsRepository.AddDescriptionAndTitle(description, tille, url)
+						urlsRepository.AddDescriptionAndTitle(description, title, url)
 					}(url)
 
 					c.Hm.Lock()
