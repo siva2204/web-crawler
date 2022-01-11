@@ -47,3 +47,8 @@ migarte -path "./migrations"  -database "mysql://root:YOUR_MYSQL_PASSWORD@/webcr
     ```bash
     go run main.go --threads <no of threads>
     ```
+
+### Docker Setup
+ - Install docker and docker-compose
+ - Run `cp .docker.sample.env .docker.env`, fill the env varaiables
+ - Run `docker-compose up` to start the services
