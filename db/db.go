@@ -32,6 +32,7 @@ func InitDB() {
 
 // this func persist index from redis to mysql
 func PersistIndex(key []string, values map[string][]string) {
+	fmt.Println("backing data from redis to mysql")
 	n := len(key)
 
 	for i := 0; i < n; i++ {
@@ -52,12 +53,25 @@ func PersistIndex(key []string, values map[string][]string) {
 
 		// saving all the urls
 		for _, ll := range values[k] {
-			var newUrl Url
+			// check if url is present in db
 
-			newUrl.KeyId = keyS.Id
-			newUrl.Url = ll
+			var url Url
 
-			if err := DB.Create(newUrl).Error; err != nil {
+			if err := DB.Where("`url` = ?", ll).First(&url).Error; err != nil {
+				fmt.Errorf("url %s not found in db", ll)
+
+				url.Url = ll
+
+				if err := DB.Create(&url).Error; err != nil {
+					fmt.Errorf("error creating url %s in db", ll)
+				}
+			}
+
+			var newindex IndexRelation
+			newindex.KeyId = keyS.Id
+			newindex.UrlId = url.Id
+
+			if err := DB.Create(&newindex).Error; err != nil {
 				fmt.Errorf("Error creating url in db %+v", err)
 			}
 		}

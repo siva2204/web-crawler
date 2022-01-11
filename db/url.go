@@ -1,8 +1,8 @@
 package db
 
 type Url struct {
-	KeyId int    `gorm:"column:keyId"`
-	Url   string `gorm:"column:url"`
+	Id  int    `gorm:"column:id"`
+	Url string `gorm:"column:url"`
 }
 
 func (Url) TableName() string {

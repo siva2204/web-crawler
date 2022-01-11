@@ -7,6 +7,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/siva2204/web-crawler/config"
 	"github.com/siva2204/web-crawler/crawler"
+	"github.com/siva2204/web-crawler/db"
 	"github.com/siva2204/web-crawler/pagerank"
 	redis_crawler "github.com/siva2204/web-crawler/redis"
 	"github.com/siva2204/web-crawler/trie"
@@ -15,6 +16,16 @@ import (
 type response struct {
 	Status bool        `json:"status"`
 	Data   interface{} `json:"data"`
+}
+
+type urldata struct {
+	Url         string `json:"url"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
+}
+
+type urls struct {
+	Url string `gorm:"url"`
 }
 
 func HttpServer(rootNode *trie.Node, graph *pagerank.PageRank) {
@@ -35,10 +46,11 @@ func HttpServer(rootNode *trie.Node, graph *pagerank.PageRank) {
 			})
 		}
 
-		urls, err := redis_crawler.Client.GetSetValues(search)
+		var key db.Key
 
-		if err != nil {
-			fmt.Println(err.Error())
+		// checking if key is there in db
+		if err := db.DB.Where("`key` = ?", search).First(&key).Error; err != nil {
+			fmt.Errorf("Error fetching key from db %+v", err)
 			return c.Status(204).JSON(
 				response{
 					Status: false,
@@ -46,38 +58,41 @@ func HttpServer(rootNode *trie.Node, graph *pagerank.PageRank) {
 				})
 		}
 
-		type urldata struct {
-			Url         string `json:"url"`
-			Title       string `json:"title"`
-			Description string `json:"description"`
+		// fetching all the urls related to the key from db
+		var urls []urls
+
+		query := "SELECT url FROM IndexRelation LEFT JOIN Url ON IndexRelation.urlId = Url.id WHERE keyId = ? LIMIT 15;"
+
+		if err := db.DB.Raw(query, key.Id).Scan(&urls).Error; err != nil {
+			fmt.Errorf("Error fetching urls from db %+v", err)
+			return c.Status(500).JSON(
+				response{
+					Status: false,
+					Data:   err.Error(),
+				})
 		}
 
 		var data []urldata
 
-		fmt.Println(urls)
-
 		for _, k := range urls {
 
 			newUrldata := urldata{
-				Url:         k,
+				Url:         k.Url,
 				Title:       "",
 				Description: "",
 			}
 
-			title, descp, err := crawler.MetaScrape(k)
+			title, descp, err := crawler.MetaScrape(k.Url)
 
 			if err != nil {
-				log.Println(fmt.Errorf("error scraping from %s url", k))
+				log.Println(fmt.Errorf("error scraping from %s url", k.Url))
 			}
 
 			newUrldata.Title = title
 			newUrldata.Description = descp
 
 			data = append(data, newUrldata)
-
 		}
-
-		fmt.Println(data)
 
 		return c.Status(200).JSON(
 			response{

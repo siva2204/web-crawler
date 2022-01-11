@@ -107,14 +107,14 @@ document.querySelector("#search-button").onclick = async(e) => {
     for (var i = 0; i < data.length; i++) {
         var aside = document.createElement("aside");
         var a = document.createElement("a");
-        var link = document.createTextNode(`${data[i]["Title"]}`);
+        var link = document.createTextNode(`${data[i]["title"]}`);
         a.appendChild(link);
         a.target = "_blank";
         a.href = `${data[i]["url"]}`;
         aside.appendChild(a);
         var p = document.createElement("p");
-        data[i]["Description"] = data[i]["Description"][0].toUpperCase() + data[i]["Description"].slice(1);
-        var text = document.createTextNode(`${data[i]["Description"]}`);
+        data[i]["description"] = data[i]["description"][0].toUpperCase() + data[i]["description"].slice(1);
+        var text = document.createTextNode(`${data[i]["description"]}`);
         p.appendChild(text);
         aside.appendChild(p);
         ele.appendChild(aside);
