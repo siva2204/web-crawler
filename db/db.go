@@ -12,14 +12,14 @@ import (
 var DB *gorm.DB
 
 func InitDB() {
-	dbName := config.Getenv("DB_NAME")
-	dbPwd := config.Getenv("DB_PWD")
-	dbUser := config.Getenv("DB_USER")
-	dbHost := config.Getenv("DB_HOST")
-	dbPort := config.Getenv("DB_PORT")
+	dbName := config.Config.DbName
+	dbPwd := config.Config.DbPassword
+	dbUser := config.Config.DbUser
+	dbHost := config.Config.DbHost
+	dbPort := config.Config.DbPort
 
 	// db connection str
-	connStr := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=true", dbUser, dbPwd, dbHost, dbPort, dbName)
+	connStr := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8&parseTime=true", dbUser, dbPwd, dbHost, dbPort, dbName)
 
 	// connecting to db
 	db, err := gorm.Open(mysql.Open(connStr), &gorm.Config{})

@@ -15,7 +15,8 @@ import (
 var threads = flag.Int("threads", 2, "number of crawler threads")
 
 func main() {
-	redis_crawler.CreateClient(config.Getenv("REDIS_HOST"), config.Getenv("REDIS_PORT"))
+	config.InitConfig()
+	redis_crawler.CreateClient(config.Config.RedisHost, config.Config.RedisHost)
 	db.InitDB()
 
 	crawlerBot := crawler.Crawler{
@@ -30,13 +31,11 @@ func main() {
 	crawler.InitSeeder(&crawlerBot)
 
 	rootNode := trie.NewNode()
-	crawlerBot.Queue.Enqueue(config.Getenv("SEED_URL"))
+	crawlerBot.Queue.Enqueue(config.Config.SeedUrl)
 
 	go crawlerBot.Run(rootNode)
 
 	go crawler.SeederInstance.Run()
-
-	crawlerBot.Queue.Enqueue(config.Getenv("SEED_URL"))
 
 	httpapi.HttpServer(rootNode)
 }

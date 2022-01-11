@@ -43,7 +43,7 @@ func uRLScrape(url string) ([]string, error) {
 		if href != "" && href[0] == '/' {
 			href = "https://" + strings.Split(url, "/")[2] + href
 			urls = append(urls, href)
-		} else if href != "" && href[0] != '/' && strings.Contains(href, config.Getenv("SEED_URL")) {
+		} else if href != "" && href[0] != '/' && strings.Contains(href, config.Config.SeedUrl) {
 			// push url to array
 			urls = append(urls, href)
 		}

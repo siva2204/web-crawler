@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/siva2204/web-crawler/config"
 	"github.com/siva2204/web-crawler/db"
 	redis_crawler "github.com/siva2204/web-crawler/redis"
 )
@@ -49,5 +50,5 @@ func (s *Seeder) Run() {
 	fmt.Println("Starting again")
 
 	s.Foo <- 0
-	time.Sleep(time.Second * 1500)
+	time.Sleep(time.Second * time.Duration(config.Config.DequeueDelay))
 }

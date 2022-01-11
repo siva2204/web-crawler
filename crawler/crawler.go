@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/siva2204/web-crawler/config"
 	"github.com/siva2204/web-crawler/queue"
 	redis_crawler "github.com/siva2204/web-crawler/redis"
 	"github.com/siva2204/web-crawler/trie"
@@ -143,9 +144,7 @@ func (c *Crawler) ListenForQueue() {
 		if c.Queue.Len() != 0 {
 			c.Ch <- c.Queue.Dequeue()
 		}
-		// TODO
-		// implementing something to stop the crawling
-		// may be with select and one more stop channel
-		time.Sleep(time.Millisecond * 15)
+
+		time.Sleep(time.Millisecond * time.Duration(config.Config.DequeueDelay))
 	}
 }

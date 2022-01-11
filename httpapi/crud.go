@@ -18,7 +18,7 @@ type response struct {
 
 func HttpServer(rootNode *trie.Node) {
 	app := fiber.New()
-	port := config.Getenv("PORT")
+	port := config.Config.Port
 
 	app.Static("/", "./frontend")
 
@@ -47,8 +47,8 @@ func HttpServer(rootNode *trie.Node) {
 
 		type urldata struct {
 			Url         string `json:"url"`
-			Title       string `json:"title`
-			Description string `json:"description`
+			Title       string `json:"title"`
+			Description string `json:"description"`
 		}
 
 		var data []urldata
@@ -66,7 +66,7 @@ func HttpServer(rootNode *trie.Node) {
 			title, descp, err := crawler.MetaScrape(k)
 
 			if err != nil {
-				fmt.Errorf("error scraping from %s url", k)
+				log.Println(fmt.Errorf("error scraping from %s url", k))
 			}
 
 			newUrldata.Title = title
@@ -114,6 +114,6 @@ func HttpServer(rootNode *trie.Node) {
 	})
 
 	// staring the http server
-	log.Fatal(app.Listen(":" + port))
+	log.Fatal(app.Listen(fmt.Sprintf(":%d", port)))
 
 }
