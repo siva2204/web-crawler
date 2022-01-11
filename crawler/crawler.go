@@ -143,6 +143,8 @@ func (c *Crawler) ListenForQueue() {
 		}
 		if c.Queue.Len() != 0 {
 			c.Ch <- c.Queue.Dequeue()
+		} else {
+			fmt.Println("Queue is empty!!!. Need more data to seed")
 		}
 
 		time.Sleep(time.Millisecond * time.Duration(config.Config.DequeueDelay))

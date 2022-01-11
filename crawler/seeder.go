@@ -23,32 +23,35 @@ func InitSeeder(crawler *Crawler) {
 
 func (s *Seeder) Run() {
 	// sleep for 10 secs
+	for {
 
-	time.Sleep(time.Second * 1500)
+		crawlDuration := config.Config.CrawlerDuration
 
-	fmt.Println("slept for 5 seconds")
+		time.Sleep(time.Second * time.Duration(crawlDuration))
 
-	s.Foo <- 1
+		fmt.Printf("crawled for %d seconds, now persisting it\n", crawlDuration)
 
-	keys, err := redis_crawler.Client.GetAll()
-	if err != nil {
-		fmt.Errorf("unable to get keys : ", err)
+		s.Foo <- 1 // pausing crawling
+
+		keys, err := redis_crawler.Client.GetAll()
+		if err != nil {
+			fmt.Errorf("unable to get keys : ", err)
+		}
+
+		values, err := redis_crawler.Client.GetMany(keys)
+		if err != nil {
+			fmt.Errorf("unable to get values : ", err)
+		}
+
+		db.PersistIndex(keys, values)
+
+		// flushing redis after persisting in mysql db
+		redis_crawler.Client.RDB.FlushAll(redis_crawler.Client.RDB.Context())
+
+		fmt.Println("Successfully persisted all the data, starting to crawl in 3s...")
+
+		time.Sleep(time.Second * 3)
+
+		s.Foo <- 0
 	}
-
-	values, err := redis_crawler.Client.GetMany(keys)
-	if err != nil {
-		fmt.Errorf("unable to get values : ", err)
-	}
-
-	db.PersistIndex(keys, values)
-
-	// flushing redis after persisting in mysql db
-	redis_crawler.Client.RDB.FlushAll(redis_crawler.Client.RDB.Context())
-
-	time.Sleep(time.Second * 5)
-
-	fmt.Println("Starting again")
-
-	s.Foo <- 0
-	time.Sleep(time.Second * time.Duration(config.Config.DequeueDelay))
 }

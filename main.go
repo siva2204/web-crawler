@@ -17,7 +17,7 @@ var threads = flag.Int("threads", 2, "number of crawler threads")
 
 func main() {
 	config.InitConfig()
-	fmt.Printf("%+v", config.Config)
+	fmt.Printf("Initializing server with %d threads\n", *threads)
 	redis_crawler.CreateClient(config.Config.RedisHost, config.Config.RedisPort)
 	db.InitDB()
 

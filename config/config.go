@@ -21,20 +21,22 @@ type ConfigType struct {
 	DbHost     string
 	DbPort     int
 
-	DequeueDelay int
+	DequeueDelay    int
+	CrawlerDuration int
 }
 
 var Config = &ConfigType{
-	RedisHost:    "127.0.0.1",
-	RedisPort:    6379,
-	Port:         8000,
-	SeedUrl:      "http://localhost:5000",
-	DbName:       "webcrawler",
-	DbPassword:   "",
-	DbUser:       "",
-	DbHost:       "0.0.0.0",
-	DbPort:       3306,
-	DequeueDelay: 50,
+	RedisHost:       "127.0.0.1",
+	RedisPort:       6379,
+	Port:            8000,
+	SeedUrl:         "http://localhost:5000",
+	DbName:          "webcrawler",
+	DbPassword:      "",
+	DbUser:          "",
+	DbHost:          "0.0.0.0",
+	DbPort:          3306,
+	DequeueDelay:    50,
+	CrawlerDuration: 1500,
 }
 
 // Load config from env to localConfig
@@ -91,6 +93,14 @@ func InitConfig() {
 			return
 		}
 		Config.DequeueDelay = parsedData
+	}
+	if data := Getenv("CRAWLER_DURATION"); data != "" {
+		parsedData, err := strconv.Atoi(data)
+		if err != nil {
+			log.Printf("Invalid data provided for PORT, and got the error %v\n", err)
+			return
+		}
+		Config.CrawlerDuration = parsedData
 	}
 }
 
