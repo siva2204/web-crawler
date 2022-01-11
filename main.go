@@ -20,6 +20,7 @@ import (
 var threads = flag.Int("threads", 2, "number of crawler threads")
 
 func main() {
+	flag.Parse()
 	config.InitConfig()
 	fmt.Printf("Initializing server with %d threads\n", *threads)
 	redis_crawler.CreateClient(config.Config.RedisHost, config.Config.RedisPort)
