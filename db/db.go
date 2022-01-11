@@ -97,3 +97,7 @@ func AddPageRank(url string, rank float64) {
 		}
 	}
 }
+
+func persistInGraph(key []string, values map[string][]string) {
+
+}

@@ -15,8 +15,41 @@ type URL struct {
 	RANK float64
 }
 
+type TOKEN struct {
+	TOKEN string
+}
+
 func (r *Neo4jRepository) Init() error {
 	return nil
+}
+
+func (u *Neo4jRepository) CreateToken(token string) error {
+	session := u.Driver.NewSession(neo4j.SessionConfig{
+		AccessMode: neo4j.AccessModeWrite,
+	})
+	defer func() {
+		_ = session.Close()
+	}()
+	if _, err := session.
+		WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+			return u.createToken(tx, &TOKEN{
+				TOKEN: token,
+			})
+		}); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *Neo4jRepository) createToken(tx neo4j.Transaction, token *TOKEN) (interface{}, error) {
+	result, err := tx.Run("MERGE (n:TOKEN {token: $token}) RETURN n", map[string]interface{}{
+		"token": token.TOKEN,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+	return result.Next(), nil
 }
 
 func (u *Neo4jRepository) CreateUrl(url string) error {
@@ -43,12 +76,6 @@ func (u *Neo4jRepository) createUrl(tx neo4j.Transaction, url *URL) (interface{}
 		"url":  url.URL,
 		"rank": url.RANK,
 	})
-	if err != nil {
-		return nil, err
-	}
-	if err != nil {
-		return nil, err
-	}
 	if err != nil {
 		return nil, err
 	}
@@ -139,3 +166,30 @@ func (u *Neo4jRepository) connectTwoUrls(tx neo4j.Transaction, url1 string, url2
 	}
 	return result, nil
 }
+
+// func (u *Neo4jRepository) ConnectTokenToUrl(url string, token string) error {
+// 	session := u.Driver.NewSession(neo4j.SessionConfig{
+// 		AccessMode: neo4j.AccessModeWrite,
+// 	})
+// 	defer func() {
+// 		_ = session.Close()
+// 	}()
+// 	if _, err := session.
+// 		WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+// 			return u.connectTwoUrls(tx, url, token)
+// 		}); err != nil {
+// 		return err
+// 	}
+// 	return nil
+// }
+
+// func (u *Neo4jRepository) connectTokenToUrl(tx neo4j.Transaction, url string, token string) (interface{}, error) {
+// 	result, err := tx.Run("MATCH (n:URL {url: $url1}), (m:URL {url: $url2}) MERGE (n)-[:LINK]->(m)", map[string]interface{}{
+// 		"url1": url1,
+// 		"url2": url2,
+// 	})
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return result, nil
+// }
