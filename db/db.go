@@ -77,3 +77,23 @@ func PersistIndex(key []string, values map[string][]string) {
 		}
 	}
 }
+
+func AddPageRank(url string, rank float64) {
+	var urlData Url
+
+	if err := DB.Where("`url` = ?", url).First(&urlData).Error; err != nil {
+		fmt.Errorf("url %s not found in db", url)
+		urlData.Url = url
+		urlData.Rank = rank
+
+		if err := DB.Create(&urlData).Error; err != nil {
+			fmt.Errorf("error creating url %s in db", url)
+		}
+	} else {
+		urlData.Rank = rank
+
+		if err := DB.Save(&urlData).Error; err != nil {
+			fmt.Errorf("error saving url %s in db", url)
+		}
+	}
+}

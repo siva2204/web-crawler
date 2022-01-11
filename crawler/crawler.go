@@ -51,55 +51,60 @@ func (c *Crawler) Run(graph *pagerank.PageRank) {
 					return
 				}
 
-				fmt.Printf("crawling the %s url, now..", url)
-				fmt.Println()
-
-				// crawl with the url
-				urls, err := uRLScrape(url, graph)
-
-				if err != nil {
-					fmt.Printf("Error crawling url %+v", err)
+				c.Hm.Lock()
+				_, ok = c.Hm.Hm[url]
+				c.Hm.Unlock()
+				if !ok {
+					fmt.Printf("crawling the %s url, now..", url)
 					fmt.Println()
 
-					// c.Wg.Done()
-					// return
-				}
-
-				go func(url string) {
-					data, err := dataScrape(url)
+					// crawl with the url
+					urls, err := uRLScrape(url, graph)
 
 					if err != nil {
-						fmt.Printf("Error getting data %+v", err)
+						fmt.Printf("Error crawling url %+v", err)
 						fmt.Println()
 
 						// c.Wg.Done()
 						// return
 					}
 
-					// for each token in data
-					for _, token := range data {
-						redis_crawler.Client.Append(token, url)
-					}
+					go func(url string) {
+						data, err := dataScrape(url)
 
-					// go rootNode.Insert(data, url)
+						if err != nil {
+							fmt.Printf("Error getting data %+v", err)
+							fmt.Println()
 
-				}(url)
+							// c.Wg.Done()
+							// return
+						}
 
-				c.Hm.Lock()
-				c.Hm.Hm[url] = true
-				c.Hm.Unlock()
+						// for each token in data
+						for _, token := range data {
+							redis_crawler.Client.Append(token, url)
+						}
 
-				// enqueue the all the related url
-				for _, url := range urls {
+						// go rootNode.Insert(data, url)
+
+					}(url)
+
 					c.Hm.Lock()
-
-					_, ok := c.Hm.Hm[url]
-
-					if !ok {
-						c.Queue.Enqueue(url)
-					}
-
+					c.Hm.Hm[url] = true
 					c.Hm.Unlock()
+
+					// enqueue the all the related url
+					for _, urlc := range urls {
+						c.Hm.Lock()
+
+						_, ok := c.Hm.Hm[urlc]
+
+						if !ok {
+							c.Queue.Enqueue(urlc)
+						}
+
+						c.Hm.Unlock()
+					}
 				}
 			}
 		}()
@@ -144,8 +149,6 @@ func (c *Crawler) ListenForQueue() {
 		}
 		if c.Queue.Len() != 0 {
 			c.Ch <- c.Queue.Dequeue()
-		} else {
-			fmt.Println("Queue is empty!!!. Need more data to seed")
 		}
 
 		time.Sleep(time.Millisecond * time.Duration(config.Config.DequeueDelay))
