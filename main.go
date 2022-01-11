@@ -10,11 +10,11 @@ import (
 	"github.com/siva2204/web-crawler/crawler"
 	"github.com/siva2204/web-crawler/db"
 	"github.com/siva2204/web-crawler/httpapi"
+	neo4j_ "github.com/siva2204/web-crawler/neo4j"
 	"github.com/siva2204/web-crawler/pagerank"
 	"github.com/siva2204/web-crawler/queue"
 	redis_crawler "github.com/siva2204/web-crawler/redis"
 	"github.com/siva2204/web-crawler/trie"
-	"github.com/siva2204/web-crawler/urls"
 )
 
 var threads = flag.Int("threads", 2, "number of crawler threads")
@@ -49,46 +49,20 @@ func main() {
 		panic("NEO4J_PASSWORD not set")
 	}
 
-	urlsRepository := urls.Neo4jRepository{
+	urlsRepository := neo4j_.Neo4jRepository{
 		Driver: driver(neo4jUri, neo4j.BasicAuth(neo4jUsername, neo4jPassword, "")),
 	}
-
-	urlsRepository.Init()
-
-	urlsRepository.CreateUrl("https://www.google.com/")
-	urlsRepository.CreateUrl("https://www.bing.com/")
-
-	urlsRepository.AddPageRank(&urls.URL{
-		URL:  "https://www.google.com/",
-		RANK: 0.5,
-	})
-
-	rank, _ := urlsRepository.GetPageRank("https://www.google.com/")
-
-	urlsRepository.ConnectTwoUrls("https://www.google.com/", "https://www.bing.com/")
-
-	urls, _ := urlsRepository.GetConnectedUrls("https://www.google.com/")
-
-	for _, url := range urls {
-		fmt.Println(url.URL)
-	}
-
-	urlsRepository.CreateToken("token")
-
-	urlsRepository.ConnectTokenAndUrl("token", "https://www.google.com/")
-
-	fmt.Printf("Page rank: %f\n", rank)
 
 	graph := pagerank.New()
 
 	rootNode := trie.NewNode()
 	crawlerBot.Queue.Enqueue(config.Config.SeedUrl)
 
-	go crawlerBot.Run(graph)
+	go crawlerBot.Run(graph, &urlsRepository)
 
 	go crawler.SeederInstance.Run()
 
-	httpapi.HttpServer(rootNode, graph)
+	httpapi.HttpServer(rootNode, graph, &urlsRepository)
 }
 
 func driver(target string, token neo4j.AuthToken) neo4j.Driver {

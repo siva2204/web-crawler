@@ -1,4 +1,4 @@
-package urls
+package neo4j
 
 import (
 	"fmt"
@@ -11,8 +11,10 @@ type Neo4jRepository struct {
 }
 
 type URL struct {
-	URL  string
-	RANK float64
+	URL         string
+	RANK        float64
+	DESCRIPTION string
+	TITLE       string
 }
 
 type TOKEN struct {
@@ -76,6 +78,50 @@ func (u *Neo4jRepository) createUrl(tx neo4j.Transaction, url string) (interface
 		return nil, err
 	}
 	return result.Next(), nil
+}
+
+func (u *Neo4jRepository) GetUrlsFromToken(token string) ([]URL, error) {
+	session := u.Driver.NewSession(neo4j.SessionConfig{
+		AccessMode: neo4j.AccessModeWrite,
+	})
+	defer func() {
+		_ = session.Close()
+	}()
+	urls, err := session.
+		ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+			return u.getUrlsFromToken(tx, token)
+		})
+	if err != nil {
+		return nil, err
+	}
+
+	return urls.([]URL), nil
+}
+
+func (u *Neo4jRepository) getUrlsFromToken(tx neo4j.Transaction, token string) ([]URL, error) {
+	result, err := tx.Run("MATCH (n:TOKEN {token: $token})-[:FOUNDIN]->(m:URL) RETURN m", map[string]interface{}{
+		"token": token,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	var urls []URL
+	for result.Next() {
+		record := result.Record()
+		url, _ := record.Values[0].(neo4j.Node).Props["url"].(string)
+		rank, _ := record.Values[0].(neo4j.Node).Props["rank"].(float64)
+		description, _ := record.Values[0].(neo4j.Node).Props["description"].(string)
+		title, _ := record.Values[0].(neo4j.Node).Props["title"].(string)
+		urls = append(urls, URL{
+			URL:         url,
+			RANK:        rank,
+			DESCRIPTION: description,
+			TITLE:       title,
+		})
+	}
+
+	return urls, nil
 }
 
 func (u *Neo4jRepository) AddPageRank(url *URL) error {
@@ -144,10 +190,12 @@ func (u *Neo4jRepository) ConnectTwoUrls(url1 string, url2 string) error {
 	defer func() {
 		_ = session.Close()
 	}()
-	if _, err := session.
+	_, err := session.
 		WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 			return u.connectTwoUrls(tx, url1, url2)
-		}); err != nil {
+		})
+	if err != nil {
+		fmt.Println(err)
 		return err
 	}
 	return nil
@@ -244,9 +292,63 @@ func (u *Neo4jRepository) ConnectTokenAndUrl(token string, url string) error {
 }
 
 func (u *Neo4jRepository) connectTokenAndUrl(tx neo4j.Transaction, token string, url string) (interface{}, error) {
-	result, err := tx.Run("MATCH (n:Token {token: $token}) WITH n (m:URL {url: $url}) MERGE (n)-[:FOUNDIN]->(m)", map[string]interface{}{
+	result, err := tx.Run("MATCH (n:TOKEN {token: $token}), (m:URL {url: $url}) MERGE (n)-[:FOUNDIN]->(m)", map[string]interface{}{
 		"token": token,
 		"url":   url,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func (u *Neo4jRepository) AddDescriptionAndTitle(description string, title string, url string) error {
+	session := u.Driver.NewSession(neo4j.SessionConfig{
+		AccessMode: neo4j.AccessModeWrite,
+	})
+	defer func() {
+		_ = session.Close()
+	}()
+	if _, err := session.
+		WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+			return u.addDescriptionAndTitle(tx, description, title, url)
+		}); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *Neo4jRepository) addDescriptionAndTitle(tx neo4j.Transaction, description string, title string, url string) (interface{}, error) {
+	result, err := tx.Run("MATCH (n:URL {url: $url}) SET n.description = $description, n.title = $title", map[string]interface{}{
+		"url":         url,
+		"title":       title,
+		"description": description,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func (u *Neo4jRepository) GetDescriptionAndTitle(url string) (description string, title string, err error) {
+	session := u.Driver.NewSession(neo4j.SessionConfig{
+		AccessMode: neo4j.AccessModeWrite,
+	})
+	defer func() {
+		_ = session.Close()
+	}()
+	if _, err := session.
+		ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+			return u.getDescriptionAndTitle(tx, url)
+		}); err != nil {
+		return "", "", err
+	}
+	return description, title, nil
+}
+
+func (u *Neo4jRepository) getDescriptionAndTitle(tx neo4j.Transaction, url string) (interface{}, error) {
+	result, err := tx.Run("MATCH (n:URL {url: $url}) RETURN n.description, n.title", map[string]interface{}{
+		"url": url,
 	})
 	if err != nil {
 		return nil, err

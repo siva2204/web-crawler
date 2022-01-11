@@ -9,8 +9,8 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/siva2204/web-crawler/config"
-	"github.com/siva2204/web-crawler/crawler"
 	"github.com/siva2204/web-crawler/db"
+	neo4j_ "github.com/siva2204/web-crawler/neo4j"
 	"github.com/siva2204/web-crawler/pagerank"
 	redis_crawler "github.com/siva2204/web-crawler/redis"
 	"github.com/siva2204/web-crawler/trie"
@@ -31,7 +31,7 @@ type urls struct {
 	Url string `gorm:"url"`
 }
 
-func HttpServer(rootNode *trie.Node, graph *pagerank.PageRank) {
+func HttpServer(rootNode *trie.Node, graph *pagerank.PageRank, urlsRepository *neo4j_.Neo4jRepository) {
 	app := fiber.New()
 	port := config.Config.Port
 
@@ -49,58 +49,44 @@ func HttpServer(rootNode *trie.Node, graph *pagerank.PageRank) {
 			})
 		}
 
-		var key db.Key
+		// var key db.Key
 
-		// checking if key is there in db
-		if err := db.DB.Where("`key` = ?", search).First(&key).Error; err != nil {
-			fmt.Errorf("Error fetching key from db %+v", err)
-			return c.Status(204).JSON(
-				response{
-					Status: false,
-					Data:   err.Error(),
-				})
-		}
+		// // checking if key is there in db
+		// if err := db.DB.Where("`key` = ?", search).First(&key).Error; err != nil {
+		// 	fmt.Errorf("Error fetching key from db %+v", err)
+		// 	return c.Status(204).JSON(
+		// 		response{
+		// 			Status: false,
+		// 			Data:   err.Error(),
+		// 		})
+		// }
 
-		// fetching all the urls related to the key from db
-		var urls []urls
+		// // fetching all the urls related to the key from db
+		// var urls []urls
 
-		query := "SELECT url FROM IndexRelation LEFT JOIN Url ON IndexRelation.urlId = Url.id WHERE keyId = ? LIMIT 15;"
+		// query := "SELECT url FROM IndexRelation LEFT JOIN Url ON IndexRelation.urlId = Url.id WHERE keyId = ? LIMIT 15;"
 
-		if err := db.DB.Raw(query, key.Id).Scan(&urls).Error; err != nil {
-			fmt.Errorf("Error fetching urls from db %+v", err)
-			return c.Status(500).JSON(
-				response{
-					Status: false,
-					Data:   err.Error(),
-				})
-		}
+		// if err := db.DB.Raw(query, key.Id).Scan(&urls).Error; err != nil {
+		// 	fmt.Errorf("Error fetching urls from db %+v", err)
+		// 	return c.Status(500).JSON(
+		// 		response{
+		// 			Status: false,
+		// 			Data:   err.Error(),
+		// 		})
+		// }
 
-		var data []urldata
+		// var data []urldata
 
-		for _, k := range urls {
+		urls, _ := urlsRepository.GetUrlsFromToken(search)
 
-			newUrldata := urldata{
-				Url:         k.Url,
-				Title:       "",
-				Description: "",
-			}
-
-			title, descp, err := crawler.MetaScrape(k.Url)
-
-			if err != nil {
-				log.Println(fmt.Errorf("error scraping from %s url", k.Url))
-			}
-
-			newUrldata.Title = title
-			newUrldata.Description = descp
-
-			data = append(data, newUrldata)
-		}
+		// for _, k := range urls {
+		// 	fmt.Println(k)
+		// }
 
 		return c.Status(200).JSON(
 			response{
 				Status: true,
-				Data:   data,
+				Data:   urls,
 			})
 	})
 

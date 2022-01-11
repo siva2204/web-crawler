@@ -10,12 +10,13 @@ import (
 	"github.com/bbalet/stopwords"
 	"github.com/jdkato/prose/v2"
 	"github.com/siva2204/web-crawler/config"
+	neo4j_ "github.com/siva2204/web-crawler/neo4j"
 	"github.com/siva2204/web-crawler/pagerank"
 )
 
 var IsLetter = regexp.MustCompile(`^[a-z]+$`).MatchString
 
-func uRLScrape(url string, graph *pagerank.PageRank) ([]string, error) {
+func uRLScrape(url string, graph *pagerank.PageRank, urlsRepository *neo4j_.Neo4jRepository) ([]string, error) {
 	// Request the HTML page.
 	res, err := http.Get(url)
 	if err != nil {
@@ -49,6 +50,9 @@ func uRLScrape(url string, graph *pagerank.PageRank) ([]string, error) {
 			urls = append(urls, href)
 		}
 		graph.Link(url, href)
+		urlsRepository.CreateUrl(url)
+		urlsRepository.CreateUrl(href)
+		urlsRepository.ConnectTwoUrls(url, href)
 	})
 	return urls, nil
 }

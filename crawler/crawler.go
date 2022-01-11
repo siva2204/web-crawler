@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/siva2204/web-crawler/config"
+	neo4j_ "github.com/siva2204/web-crawler/neo4j"
 	"github.com/siva2204/web-crawler/queue"
 	redis_crawler "github.com/siva2204/web-crawler/redis"
 
@@ -29,7 +30,7 @@ type Crawler struct {
 }
 
 // run method starts crawling
-func (c *Crawler) Run(graph *pagerank.PageRank) {
+func (c *Crawler) Run(graph *pagerank.PageRank, urlsRepository *neo4j_.Neo4jRepository) {
 	// check if the url is already crawled
 
 	if c.Queue.Len() == 0 {
@@ -59,7 +60,7 @@ func (c *Crawler) Run(graph *pagerank.PageRank) {
 					fmt.Println()
 
 					// crawl with the url
-					urls, err := uRLScrape(url, graph)
+					urls, err := uRLScrape(url, graph, urlsRepository)
 
 					if err != nil {
 						fmt.Printf("Error crawling url %+v", err)
@@ -83,10 +84,22 @@ func (c *Crawler) Run(graph *pagerank.PageRank) {
 						// for each token in data
 						for _, token := range data {
 							redis_crawler.Client.Append(token, url)
+							urlsRepository.CreateToken(token)
+							urlsRepository.ConnectTokenAndUrl(token, url)
 						}
 
 						// go rootNode.Insert(data, url)
 
+					}(url)
+
+					go func(url string) {
+						description, tille, err := MetaScrape(url)
+
+						if err != nil {
+							fmt.Printf("Error getting description %+v", err)
+							fmt.Println()
+						}
+						urlsRepository.AddDescriptionAndTitle(description, tille, url)
 					}(url)
 
 					c.Hm.Lock()
