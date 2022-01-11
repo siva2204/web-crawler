@@ -26,27 +26,29 @@
 
 <body>
     <div id="visualization"></div>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.20.0/axios.min.js"></script>
     <script type="text/javascript">
-        fetch("/data")
-            .then((response) => response.json())
-            .then((data) => createNetwork(data));
+        axios.get('/data')
+            .then(({
+                data
+            }) => createNetwork(data.data))
+
 
         const createNetwork = (data) => {
             let edgeList = [],
                 nodeList = [];
-            const colorMap = {
+            const colorMap = [
                 "lightblue",
                 "lightgreen",
                 "lightpink",
-            };
+            ];
             for (let i = 0; i < data.length; i++) {
                 let page = data[i];
                 nodeList.push({
                     id: i,
                     label: page.title,
                     color: {
-                        background: colorMap[randomInt(0, colorMap.length - 1)],
+                        background: colorMap[Math.random() * colorMap.length | 0],
                     },
                     value: page.rank,
                 });

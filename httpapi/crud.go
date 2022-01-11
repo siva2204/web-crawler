@@ -1,8 +1,11 @@
 package httpapi
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
+	"os"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/siva2204/web-crawler/config"
@@ -145,12 +148,30 @@ func HttpServer(rootNode *trie.Node, graph *pagerank.PageRank) {
 	})
 
 	app.Get("/data", func(c *fiber.Ctx) error {
-		file := "../static/data/site_data.json"
-		return c.JSON(response{
-			Status: true,
-			Data:   file,
-		})
-
+		type Site struct {
+			Title      string   `json:"title"`
+			Body       string   `json:"body"`
+			Links      []int    `json:"links"`
+			ParentSite string   `json:"parent_site"`
+			SiteURL    string   `json:"site_url"`
+			LinkURL    []string `json:"link_urls"`
+			Slug       string   `json:"slug"`
+			Rank       float64
+			Inbound    []int
+		}
+		jsonFile, err := os.Open("./site/data/site_data.json")
+		if err != nil {
+			fmt.Println(err)
+		}
+		defer jsonFile.Close()
+		byteValue, _ := ioutil.ReadAll(jsonFile)
+		var sites []Site
+		json.Unmarshal(byteValue, &sites)
+		return c.Status(200).JSON(
+			response{
+				Status: true,
+				Data:   sites,
+			})
 	})
 
 	// staring the http server
