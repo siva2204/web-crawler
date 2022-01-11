@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 
 	"github.com/siva2204/web-crawler/config"
 	"github.com/siva2204/web-crawler/crawler"
@@ -16,7 +17,8 @@ var threads = flag.Int("threads", 2, "number of crawler threads")
 
 func main() {
 	config.InitConfig()
-	redis_crawler.CreateClient(config.Config.RedisHost, config.Config.RedisHost)
+	fmt.Printf("%+v", config.Config)
+	redis_crawler.CreateClient(config.Config.RedisHost, config.Config.RedisPort)
 	db.InitDB()
 
 	crawlerBot := crawler.Crawler{

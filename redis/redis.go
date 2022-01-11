@@ -27,9 +27,9 @@ type redisPayLoad struct {
 
 var Client *RedisClient
 
-func CreateClient(host string, port string) {
+func CreateClient(host string, port int) {
 	ctx := context.Background()
-	addr := fmt.Sprintf("%s:%s", host, port)
+	addr := fmt.Sprintf("%s:%d", host, port)
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     addr,
 		Password: "",
