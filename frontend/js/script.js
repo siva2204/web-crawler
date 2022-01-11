@@ -85,6 +85,10 @@ document.querySelector("#search-button").onclick = async(e) => {
     e.preventDefault();
     word = document.querySelector("#input").value;
     document.querySelector("section").innerText = "Searching...";
+    const anchor = document.createElement("a");
+    anchor.href = "/result?search=" + word;
+    console.log('a');
+    anchor.click();
     let timeStart = Date.now();
     let resp = await axios.get("/search/" + word);
     let timeEnd = Date.now();
